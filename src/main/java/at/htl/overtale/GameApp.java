@@ -8,6 +8,8 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GameApp extends GameApplication {
 
+    private OvertaleHud hud;
+
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setTitle("Overtale");
@@ -40,6 +42,9 @@ public class GameApp extends GameApplication {
     @Override
     protected void initUI() {
         // HUD, score text, health bar, etc.
+        hud = new OvertaleHud();
+        hud.build();
+        hud.showDialog("Welcome to Overtale");
     }
 
     @Override

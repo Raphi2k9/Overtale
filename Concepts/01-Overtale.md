@@ -93,7 +93,7 @@ Sie betrachten die Freiheit der Monster als "Systemfehler". Ihre Lösung: Die **
 Der Himmel ist nicht nur Wolken; er ist eine hochtechnologische, sakrale Welt.
 
 * **The Gilded Gates:** Der Einstiegspunkt. Goldene Architektur und schwebende Gärten.
-* **The Prism Forest:** Ein Wald aus Glaskonstrukten, die das Sonnenlicht in tödliche Laser-Rätsel brechen.
+* **The Flashing Forest:** Ein Wald aus Glaskonstrukten, die das Sonnenlicht in tödliche Laser-Rätsel brechen.
 * **The Binary Cathedral:** Das Zentrum der Macht, in dem die Archonen den "Code der Welt" verwalten.
 
 ---

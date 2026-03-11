@@ -19,4 +19,16 @@ public class GameEntityFactory implements EntityFactory {
                 .zIndex(1)
                 .build();
     }
+    @Spawns("bullet")
+    public Entity newBullet(SpawnData data) {
+        double vx = data.get("vx");
+        double vy = data.get("vy");
+
+        return FXGL.entityBuilder(data)
+                .type(EntityType.BULLET)
+                .viewWithBBox(new Rectangle(10, 10, Color.WHITE))
+                .with(new CollidableComponent(true))
+                .with(new BulletComponent(vx, vy))  // ← Velocity direkt mitgeben
+                .build();
+    }
 }

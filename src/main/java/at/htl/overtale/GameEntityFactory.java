@@ -26,7 +26,7 @@ public class GameEntityFactory implements EntityFactory {
 
         return FXGL.entityBuilder(data)
                 .type(EntityType.BULLET)
-                .viewWithBBox(new Rectangle(10, 10, Color.WHITE))
+                .viewWithBBox(new Rectangle(10, 10, Color.BLACK))
                 .with(new CollidableComponent(true))
                 .with(new BulletComponent(vx, vy))  // ← Velocity direkt mitgeben
                 .build();

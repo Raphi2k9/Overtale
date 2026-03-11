@@ -5,12 +5,10 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.physics.CollisionHandler;
+import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 
-import javafx.geometry.Point2D;
-
-import static com.almasb.fxgl.app.GameApplication.launch;
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GameApp extends GameApplication {
@@ -30,30 +28,30 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initInput() {
-        onKey(KeyCode.W, () -> getGameWorld().getSingleton(EntityType.PLAYER).translateY(-3));
-        onKey(KeyCode.S, () -> getGameWorld().getSingleton(EntityType.PLAYER).translateY(3));
-        onKey(KeyCode.D, () -> getGameWorld().getSingleton(EntityType.PLAYER).translateX(3));
-        onKey(KeyCode.A, () -> getGameWorld().getSingleton(EntityType.PLAYER).translateX(-3));
-
+        onKey(KeyCode.W, () -> player.translateY(-3));
+        onKey(KeyCode.S, () -> player.translateY(3));
+        onKey(KeyCode.D, () -> player.translateX(3));
+        onKey(KeyCode.A, () -> player.translateX(-3));
     }
 
     @Override
     protected void initGame() {
         getGameWorld().addEntityFactory(new GameEntityFactory());
+        player = spawn("player", 400, 300);
 
-        player = spawn("player", 100, 100);
+        // ✅ DAS hat gefehlt — ohne das spawnen nie Bullets!
+        getGameTimer().runAtInterval(() -> spawnBullet(), Duration.seconds(1.5));
     }
 
     @Override
     protected void initPhysics() {
-        // Collision handlers go here
         getPhysicsWorld().addCollisionHandler(
                 new CollisionHandler(EntityType.PLAYER, EntityType.BULLET) {
                     @Override
                     protected void onCollisionBegin(Entity p, Entity bullet) {
                         bullet.removeFromWorld();
-                        // HP abziehen
-                        hud.updateHP(currentHP - 2, maxHP);
+                        currentHP -= 2; // ✅ erst speichern
+                        hud.updateHP(currentHP, maxHP);
                     }
                 }
         );
@@ -61,7 +59,6 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initUI() {
-        // HUD, score text, health bar, etc.
         hud = new OvertaleHud();
         hud.build();
         hud.showDialog("Welcome to Overtale");
@@ -69,19 +66,9 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
-        // Called every frame — tpf = time per frame
-        getGameWorld().getEntitiesByType(EntityType.BULLET).forEach(bullet -> {
-            double vx = bullet.getProperties().getDouble("vx");
-            double vy = bullet.getProperties().getDouble("vy");
-            bullet.translate(vx * tpf, vy * tpf);
-
-            // Entfernen wenn außerhalb
-            if (bullet.getX() < -20 || bullet.getX() > 820 ||
-                    bullet.getY() < -20 || bullet.getY() > 620) {
-                bullet.removeFromWorld();
-            }
-        });
+        // ✅ leer lassen — BulletComponent bewegt die Bullets selbst!
     }
+
     private void spawnBullet() {
         int side = (int)(Math.random() * 4);
         double x, y;
@@ -97,7 +84,6 @@ public class GameApp extends GameApplication {
                 .normalize()
                 .multiply(200);
 
-        // Velocity direkt in SpawnData mitgeben
         spawn("bullet", new SpawnData(x, y)
                 .put("vx", direction.getX())
                 .put("vy", direction.getY()));

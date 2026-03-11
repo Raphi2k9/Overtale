@@ -15,8 +15,8 @@ public class BulletComponent extends Component {
     public void onUpdate(double tpf) {
         entity.translate(velocity.getX() * tpf, velocity.getY() * tpf);
 
-        if (entity.getX() < -20 || entity.getX() > 820 ||
-                entity.getY() < -20 || entity.getY() > 620) {
+        if (entity.getX() < -20 || entity.getX() > 400 ||
+                entity.getY() < -20 || entity.getY() > 400) {
             entity.removeFromWorld();
         }
     }

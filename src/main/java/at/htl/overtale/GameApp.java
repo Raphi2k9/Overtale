@@ -1,5 +1,9 @@
 package at.htl.overtale;
 
+import at.htl.overtale.entity.EntityType;
+import at.htl.overtale.entity.GameEntityFactory;
+import at.htl.overtale.hud.DialogManager;
+import at.htl.overtale.hud.OvertaleHud;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;

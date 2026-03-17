@@ -14,7 +14,9 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 public class GameApp extends GameApplication {
 
     private OvertaleHud hud;
+    private DialogManager dialogManager;
     private Entity player;
+    private Entity npc;
     private int currentHP = 20;
     private int maxHP = 20;
 
@@ -28,19 +30,32 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initInput() {
-        onKey(KeyCode.W, () -> player.translateY(-3));
-        onKey(KeyCode.S, () -> player.translateY(3));
-        onKey(KeyCode.D, () -> player.translateX(3));
-        onKey(KeyCode.A, () -> player.translateX(-3));
+        onKey(KeyCode.W, () -> { if (!dialogManager.isActive()) player.translateY(-3); });
+        onKey(KeyCode.S, () -> { if (!dialogManager.isActive()) player.translateY(3); });
+        onKey(KeyCode.D, () -> { if (!dialogManager.isActive()) player.translateX(3); });
+        onKey(KeyCode.A, () -> { if (!dialogManager.isActive()) player.translateX(-3); });
+
+        onKeyDown(KeyCode.Z, () -> dialogManager.advance());
+
+        onKeyDown(KeyCode.E, () -> {
+            if (!dialogManager.isActive() && player.distanceBBox(npc) < 60) {
+                dialogManager.startDialog(java.util.List.of(
+                    "Howdy! I'm Flowey.",
+                    "Flowey the Flower!",
+                    "Down here, LOVE is shared through...",
+                    "...little white friendliness pellets!"
+                ));
+            }
+        });
     }
 
     @Override
     protected void initGame() {
         getGameWorld().addEntityFactory(new GameEntityFactory());
         player = spawn("player", 400, 300);
+        npc    = spawn("npc", 200, 250);
 
-        // ✅ DAS hat gefehlt — ohne das spawnen nie Bullets!
-        getGameTimer().runAtInterval(() -> spawnBullet(), Duration.seconds(1.5));
+        //getGameTimer().runAtInterval(() -> spawnBullet(), Duration.seconds(1.5));
     }
 
     @Override
@@ -61,7 +76,7 @@ public class GameApp extends GameApplication {
     protected void initUI() {
         hud = new OvertaleHud();
         hud.build();
-        hud.showDialog("Welcome to Overtale");
+        dialogManager = new DialogManager(hud);
     }
 
     @Override

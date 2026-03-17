@@ -19,6 +19,15 @@ public class GameEntityFactory implements EntityFactory {
                 .zIndex(1)
                 .build();
     }
+    @Spawns("npc")
+    public Entity newNpc(SpawnData data) {
+        return FXGL.entityBuilder(data)
+                .type(EntityType.NPC)
+                .viewWithBBox(new Rectangle(40, 40, Color.YELLOW))
+                .zIndex(1)
+                .build();
+    }
+
     @Spawns("bullet")
     public Entity newBullet(SpawnData data) {
         double vx = data.get("vx");

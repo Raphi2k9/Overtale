@@ -3,5 +3,6 @@ package at.htl.overtale;
 public enum EntityType {
     PLAYER,
     ENEMY,
-    BULLET
+    BULLET,
+    NPC
 }

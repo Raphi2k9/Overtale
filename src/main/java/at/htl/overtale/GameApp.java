@@ -85,7 +85,7 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
-        // ✅ leer lassen — BulletComponent bewegt die Bullets selbst!
+
     }
 
     private void spawnBullet() {

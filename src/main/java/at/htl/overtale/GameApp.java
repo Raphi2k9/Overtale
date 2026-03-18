@@ -1,8 +1,11 @@
 package at.htl.overtale;
 
+import at.htl.overtale.component.items.Engelssegen;
+import at.htl.overtale.component.items.Inventory;
 import at.htl.overtale.entity.EntityType;
 import at.htl.overtale.entity.GameEntityFactory;
 import at.htl.overtale.hud.DialogManager;
+import at.htl.overtale.hud.InventoryHud;
 import at.htl.overtale.hud.OvertaleHud;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
@@ -19,6 +22,8 @@ public class GameApp extends GameApplication {
 
     private OvertaleHud hud;
     private DialogManager dialogManager;
+    private InventoryHud inventoryHud;
+    private Inventory inventory;
     private Entity player;
     private Entity npc;
     private int currentHP = 20;
@@ -34,12 +39,50 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initInput() {
-        onKey(KeyCode.W, () -> { if (!dialogManager.isActive()) player.translateY(-3); });
-        onKey(KeyCode.S, () -> { if (!dialogManager.isActive()) player.translateY(3); });
-        onKey(KeyCode.D, () -> { if (!dialogManager.isActive()) player.translateX(3); });
-        onKey(KeyCode.A, () -> { if (!dialogManager.isActive()) player.translateX(-3); });
+        onKey(KeyCode.W, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateY(-3); });
+        onKey(KeyCode.S, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateY(3); });
+        onKey(KeyCode.D, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateX(3); });
+        onKey(KeyCode.A, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateX(-3); });
 
-        onKeyDown(KeyCode.Z, () -> dialogManager.advance());
+        // Inventar öffnen / Item benutzen
+        onKeyDown(KeyCode.I, () -> {
+            if (!dialogManager.isActive()) {
+                if (inventoryHud.isVisible()) {
+                    inventoryHud.hide();
+                } else {
+                    inventoryHud.show();
+                }
+            }
+        });
+
+        // Inventar-Navigation
+        onKeyDown(KeyCode.UP,    () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(-1); });
+        onKeyDown(KeyCode.DOWN,  () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(+1); });
+        onKeyDown(KeyCode.LEFT,  () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(-4); });
+        onKeyDown(KeyCode.RIGHT, () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(+4); });
+
+        // X schließt das Inventar
+        onKeyDown(KeyCode.X, () -> { if (inventoryHud.isVisible()) inventoryHud.hide(); });
+
+        onKeyDown(KeyCode.Z, () -> {
+            if (inventoryHud.isVisible()) {
+                int slot = inventoryHud.getSelectedSlot();
+                at.htl.overtale.component.items.Item item = inventory.getItem(slot);
+                if (item != null) {
+                    int heal = item.getHealAmount();
+                    String msg = inventoryHud.useSelected();
+                    if (heal > 0) {
+                        currentHP = Math.min(currentHP + heal, maxHP);
+                        hud.updateHP(currentHP, maxHP);
+                    }
+                    inventoryHud.hide();
+                    hud.showDialogOnly();
+                    dialogManager.startDialog(java.util.List.of(msg));
+                }
+            } else {
+                dialogManager.advance();
+            }
+        });
 
         onKeyDown(KeyCode.E, () -> {
             if (!dialogManager.isActive() && player.distanceBBox(npc) < 60) {
@@ -58,6 +101,11 @@ public class GameApp extends GameApplication {
         getGameWorld().addEntityFactory(new GameEntityFactory());
         player = spawn("player", 400, 300);
         npc    = spawn("npc", 200, 250);
+
+        // Beispiel-Items ins Inventar legen
+        inventory = new Inventory();
+        inventory.addItem(new Engelssegen());
+        inventory.addItem(new Engelssegen());
 
         //getGameTimer().runAtInterval(() -> spawnBullet(), Duration.seconds(1.5));
     }
@@ -81,6 +129,9 @@ public class GameApp extends GameApplication {
         hud = new OvertaleHud();
         hud.build();
         dialogManager = new DialogManager(hud);
+
+        inventoryHud = new InventoryHud(inventory);
+        inventoryHud.build();
     }
 
     @Override

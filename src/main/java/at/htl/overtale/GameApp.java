@@ -14,20 +14,19 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.physics.CollisionHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
-import javafx.util.Duration;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GameApp extends GameApplication {
 
-    private OvertaleHud hud;
-    private DialogManager dialogManager;
-    private InventoryHud inventoryHud;
-    private Inventory inventory;
-    private Entity player;
-    private Entity npc;
-    private int currentHP = 20;
-    private int maxHP = 20;
+    private OvertaleHud _hud;
+    private DialogManager _dialogManager;
+    private InventoryHud _inventoryHud;
+    private Inventory _inventory;
+    private Entity _player;
+    private Entity _npc;
+    private int _currentHP = 20;
+    private int _maxHP = 20;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -39,82 +38,82 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initInput() {
-        onKey(KeyCode.W, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateY(-3); });
-        onKey(KeyCode.S, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateY(3); });
-        onKey(KeyCode.D, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateX(3); });
-        onKey(KeyCode.A, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateX(-3); });
+        onKey(KeyCode.W, () -> { if (!_dialogManager.isActive() && !_inventoryHud.isVisible()) _player.translateY(-3); });
+        onKey(KeyCode.S, () -> { if (!_dialogManager.isActive() && !_inventoryHud.isVisible()) _player.translateY(3); });
+        onKey(KeyCode.D, () -> { if (!_dialogManager.isActive() && !_inventoryHud.isVisible()) _player.translateX(3); });
+        onKey(KeyCode.A, () -> { if (!_dialogManager.isActive() && !_inventoryHud.isVisible()) _player.translateX(-3); });
 
         // Inventar-Navigation (nur wenn Inventar sichtbar)
-        onKeyDown(KeyCode.UP,    () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(-1); });
-        onKeyDown(KeyCode.DOWN,  () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(+1); });
+        onKeyDown(KeyCode.UP,    () -> { if (_inventoryHud.isVisible()) _inventoryHud.navigate(-1); });
+        onKeyDown(KeyCode.DOWN,  () -> { if (_inventoryHud.isVisible()) _inventoryHud.navigate(+1); });
 
         // LEFT/RIGHT: HUD-Button-Navigation oder Inventar-Spalte
         onKeyDown(KeyCode.LEFT, () -> {
-            if (inventoryHud.isVisible()) {
-                inventoryHud.navigate(-4);
-            } else if (hud.isHUDVisible()) {
-                int prev = (hud.getSelectedButton() - 1 + 4) % 4;
-                hud.highlightButton(prev);
+            if (_inventoryHud.isVisible()) {
+                _inventoryHud.navigate(-4);
+            } else if (_hud.isHUDVisible()) {
+                int prev = (_hud.getSelectedButton() - 1 + 4) % 4;
+                _hud.highlightButton(prev);
             }
         });
         onKeyDown(KeyCode.RIGHT, () -> {
-            if (inventoryHud.isVisible()) {
-                inventoryHud.navigate(+4);
-            } else if (hud.isHUDVisible()) {
-                int next = (hud.getSelectedButton() + 1) % 4;
-                hud.highlightButton(next);
+            if (_inventoryHud.isVisible()) {
+                _inventoryHud.navigate(+4);
+            } else if (_hud.isHUDVisible()) {
+                int next = (_hud.getSelectedButton() + 1) % 4;
+                _hud.highlightButton(next);
             }
         });
 
         // X schließt das Inventar → zurück zum HUD
         onKeyDown(KeyCode.X, () -> {
-            if (inventoryHud.isVisible()) {
-                inventoryHud.hide();
-                hud.showHUD();
+            if (_inventoryHud.isVisible()) {
+                _inventoryHud.hide();
+                _hud.showHUD();
             }
         });
 
         // Q = Item wegwerfen
         onKeyDown(KeyCode.Q, () -> {
-            if (inventoryHud.isVisible()) {
-                String msg = inventoryHud.dropSelected();
+            if (_inventoryHud.isVisible()) {
+                String msg = _inventoryHud.dropSelected();
                 if (msg != null) {
-                    inventoryHud.hide();
-                    dialogManager.startDialog(java.util.List.of(msg), () -> hud.showHUD());
+                    _inventoryHud.hide();
+                    _dialogManager.startDialog(java.util.List.of(msg), () -> _hud.showHUD());
                 }
             }
         });
 
         onKeyDown(KeyCode.Z, () -> {
-            if (inventoryHud.isVisible()) {
+            if (_inventoryHud.isVisible()) {
                 // Item benutzen
-                int slot = inventoryHud.getSelectedSlot();
-                at.htl.overtale.component.items.Item item = inventory.getItem(slot);
+                int slot = _inventoryHud.getSelectedSlot();
+                at.htl.overtale.component.items.Item item = _inventory.getItem(slot);
                 if (item != null) {
                     int heal = item.getHealAmount();
-                    String msg = inventoryHud.useSelected();
+                    String msg = _inventoryHud.useSelected();
                     if (heal > 0) {
-                        currentHP = Math.min(currentHP + heal, maxHP);
-                        hud.updateHP(currentHP, maxHP);
+                        _currentHP = Math.min(_currentHP + heal, _maxHP);
+                        _hud.updateHP(_currentHP, _maxHP);
                     }
-                    inventoryHud.hide();
-                    dialogManager.startDialog(java.util.List.of(msg), () -> hud.showHUD());
+                    _inventoryHud.hide();
+                    _dialogManager.startDialog(java.util.List.of(msg), () -> _hud.showHUD());
                 }
-            } else if (hud.isHUDVisible()) {
+            } else if (_hud.isHUDVisible()) {
                 // HUD-Button bestätigen
-                int selected = hud.getSelectedButton();
+                int selected = _hud.getSelectedButton();
                 if (selected == 2) { // ITEM
-                    inventoryHud.show();
-                    hud.hideAll();
+                    _inventoryHud.show();
+                    _hud.hideAll();
                 }
             } else {
-                dialogManager.advance();
+                _dialogManager.advance();
             }
         });
 
         onKeyDown(KeyCode.E, () -> {
-            if (!dialogManager.isActive() && player.distanceBBox(npc) < 60) {
-                dialogManager.startDialog(java.util.List.of(
+            if (!_dialogManager.isActive() && _player.distanceBBox(_npc) < 60) {
+                _dialogManager.startDialog(java.util.List.of(
                     "Howdy! I'm Flowey.",
                     "Flowey the Flower!",
                     "Down here, LOVE is shared through...",
@@ -127,13 +126,13 @@ public class GameApp extends GameApplication {
     @Override
     protected void initGame() {
         getGameWorld().addEntityFactory(new GameEntityFactory());
-        player = spawn("player", 400, 300);
-        npc    = spawn("npc", 200, 250);
+        _player = spawn("player", 400, 300);
+        _npc = spawn("npc", 200, 250);
 
         // Beispiel-Items ins Inventar legen
-        inventory = new Inventory();
-        inventory.addItem(new Engelssegen());
-        inventory.addItem(new Engelssegen());
+        _inventory = new Inventory();
+        _inventory.addItem(new Engelssegen());
+        _inventory.addItem(new Engelssegen());
 
         //getGameTimer().runAtInterval(() -> spawnBullet(), Duration.seconds(1.5));
     }
@@ -145,8 +144,8 @@ public class GameApp extends GameApplication {
                     @Override
                     protected void onCollisionBegin(Entity p, Entity bullet) {
                         bullet.removeFromWorld();
-                        currentHP -= 2; // ✅ erst speichern
-                        hud.updateHP(currentHP, maxHP);
+                        _currentHP -= 2; // ✅ erst speichern
+                        _hud.updateHP(_currentHP, _maxHP);
                     }
                 }
         );
@@ -154,12 +153,12 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initUI() {
-        hud = new OvertaleHud();
-        hud.build();
-        dialogManager = new DialogManager(hud);
+        _hud = new OvertaleHud();
+        _hud.build();
+        _dialogManager = new DialogManager(_hud);
 
-        inventoryHud = new InventoryHud(inventory);
-        inventoryHud.build();
+        _inventoryHud = new InventoryHud(_inventory);
+        _inventoryHud.build();
     }
 
     @Override
@@ -178,7 +177,7 @@ public class GameApp extends GameApplication {
             default->{ x = 810;  y = Math.random() * 600;  }
         }
 
-        Point2D direction = new Point2D(player.getX() - x, player.getY() - y)
+        Point2D direction = new Point2D(_player.getX() - x, _player.getY() - y)
                 .normalize()
                 .multiply(200);
 

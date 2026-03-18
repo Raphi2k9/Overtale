@@ -25,6 +25,7 @@ public class GameApp extends GameApplication {
     private Inventory _inventory;
     private Entity _player;
     private Entity _npc;
+    private Entity _enemy;
     private int _currentHP = 20;
     private int _maxHP = 20;
 
@@ -65,11 +66,13 @@ public class GameApp extends GameApplication {
             }
         });
 
-        // X schließt das Inventar → zurück zum HUD
+        // X schließt das Inventar → zurück zum HUD; außerhalb schließt HUD
         onKeyDown(KeyCode.X, () -> {
             if (_inventoryHud.isVisible()) {
                 _inventoryHud.hide();
                 _hud.showHUD();
+            } else if (_hud.isHUDVisible()) {
+                _hud.hideAll();
             }
         });
 
@@ -112,13 +115,39 @@ public class GameApp extends GameApplication {
         });
 
         onKeyDown(KeyCode.E, () -> {
-            if (!_dialogManager.isActive() && _player.distanceBBox(_npc) < 60) {
-                _dialogManager.startDialog(java.util.List.of(
-                    "Howdy! I'm Flowey.",
-                    "Flowey the Flower!",
-                    "Down here, LOVE is shared through...",
-                    "...little white friendliness pellets!"
-                ));
+            if (_inventoryHud.isVisible()) {
+                // Item benutzen (wie Z)
+                int slot = _inventoryHud.getSelectedSlot();
+                at.htl.overtale.component.items.Item item = _inventory.getItem(slot);
+                if (item != null) {
+                    int heal = item.getHealAmount();
+                    String msg = _inventoryHud.useSelected();
+                    if (heal > 0) {
+                        _currentHP = Math.min(_currentHP + heal, _maxHP);
+                        _hud.updateHP(_currentHP, _maxHP);
+                    }
+                    _inventoryHud.hide();
+                    _dialogManager.startDialog(java.util.List.of(msg), () -> _hud.showHUD());
+                }
+            } else if (_hud.isHUDVisible()) {
+                // HUD-Button bestätigen (wie Z)
+                int selected = _hud.getSelectedButton();
+                if (selected == 2) { // ITEM
+                    _inventoryHud.show();
+                    _hud.hideAll();
+                }
+            } else if (!_dialogManager.isActive()) {
+                // Welt-Interaktion
+                if (_player.distanceBBox(_npc) < 60) {
+                    _dialogManager.startDialog(java.util.List.of(
+                        "Howdy! I'm Flowey.",
+                        "Flowey the Flower!",
+                        "Down here, LOVE is shared through...",
+                        "...little white friendliness pellets!"
+                    ));
+                } else if (_player.distanceBBox(_enemy) < 60) {
+                    _hud.showHUD();
+                }
             }
         });
     }
@@ -128,6 +157,7 @@ public class GameApp extends GameApplication {
         getGameWorld().addEntityFactory(new GameEntityFactory());
         _player = spawn("player", 400, 300);
         _npc = spawn("npc", 200, 250);
+        _enemy = spawn("enemy", 550, 300);
 
         // Beispiel-Items ins Inventar legen
         _inventory = new Inventory();

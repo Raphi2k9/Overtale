@@ -44,28 +44,50 @@ public class GameApp extends GameApplication {
         onKey(KeyCode.D, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateX(3); });
         onKey(KeyCode.A, () -> { if (!dialogManager.isActive() && !inventoryHud.isVisible()) player.translateX(-3); });
 
-        // Inventar öffnen / Item benutzen
-        onKeyDown(KeyCode.I, () -> {
-            if (!dialogManager.isActive()) {
-                if (inventoryHud.isVisible()) {
+        // Inventar-Navigation (nur wenn Inventar sichtbar)
+        onKeyDown(KeyCode.UP,    () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(-1); });
+        onKeyDown(KeyCode.DOWN,  () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(+1); });
+
+        // LEFT/RIGHT: HUD-Button-Navigation oder Inventar-Spalte
+        onKeyDown(KeyCode.LEFT, () -> {
+            if (inventoryHud.isVisible()) {
+                inventoryHud.navigate(-4);
+            } else if (hud.isHUDVisible()) {
+                int prev = (hud.getSelectedButton() - 1 + 4) % 4;
+                hud.highlightButton(prev);
+            }
+        });
+        onKeyDown(KeyCode.RIGHT, () -> {
+            if (inventoryHud.isVisible()) {
+                inventoryHud.navigate(+4);
+            } else if (hud.isHUDVisible()) {
+                int next = (hud.getSelectedButton() + 1) % 4;
+                hud.highlightButton(next);
+            }
+        });
+
+        // X schließt das Inventar → zurück zum HUD
+        onKeyDown(KeyCode.X, () -> {
+            if (inventoryHud.isVisible()) {
+                inventoryHud.hide();
+                hud.showHUD();
+            }
+        });
+
+        // Q = Item wegwerfen
+        onKeyDown(KeyCode.Q, () -> {
+            if (inventoryHud.isVisible()) {
+                String msg = inventoryHud.dropSelected();
+                if (msg != null) {
                     inventoryHud.hide();
-                } else {
-                    inventoryHud.show();
+                    dialogManager.startDialog(java.util.List.of(msg), () -> hud.showHUD());
                 }
             }
         });
 
-        // Inventar-Navigation
-        onKeyDown(KeyCode.UP,    () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(-1); });
-        onKeyDown(KeyCode.DOWN,  () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(+1); });
-        onKeyDown(KeyCode.LEFT,  () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(-4); });
-        onKeyDown(KeyCode.RIGHT, () -> { if (inventoryHud.isVisible()) inventoryHud.navigate(+4); });
-
-        // X schließt das Inventar
-        onKeyDown(KeyCode.X, () -> { if (inventoryHud.isVisible()) inventoryHud.hide(); });
-
         onKeyDown(KeyCode.Z, () -> {
             if (inventoryHud.isVisible()) {
+                // Item benutzen
                 int slot = inventoryHud.getSelectedSlot();
                 at.htl.overtale.component.items.Item item = inventory.getItem(slot);
                 if (item != null) {
@@ -76,8 +98,14 @@ public class GameApp extends GameApplication {
                         hud.updateHP(currentHP, maxHP);
                     }
                     inventoryHud.hide();
-                    hud.showDialogOnly();
-                    dialogManager.startDialog(java.util.List.of(msg));
+                    dialogManager.startDialog(java.util.List.of(msg), () -> hud.showHUD());
+                }
+            } else if (hud.isHUDVisible()) {
+                // HUD-Button bestätigen
+                int selected = hud.getSelectedButton();
+                if (selected == 2) { // ITEM
+                    inventoryHud.show();
+                    hud.hideAll();
                 }
             } else {
                 dialogManager.advance();

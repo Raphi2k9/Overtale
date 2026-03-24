@@ -1,6 +1,7 @@
 package at.htl.overtale;
 
 import at.htl.overtale.component.items.Engelssegen;
+import at.htl.overtale.component.items.GoldenerNektar;
 import at.htl.overtale.component.items.Inventory;
 import at.htl.overtale.entity.EntityType;
 import at.htl.overtale.entity.GameEntityFactory;
@@ -27,7 +28,7 @@ public class GameApp extends GameApplication {
     private Entity _npc;
     private Entity _enemy;
     private int _currentHP = 20;
-    private int _maxHP = 20;
+    private int _maxHP = 40;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -163,6 +164,7 @@ public class GameApp extends GameApplication {
         _inventory = new Inventory();
         _inventory.addItem(new Engelssegen());
         _inventory.addItem(new Engelssegen());
+        _inventory.addItem(new GoldenerNektar());
 
         //getGameTimer().runAtInterval(() -> spawnBullet(), Duration.seconds(1.5));
     }
@@ -189,6 +191,8 @@ public class GameApp extends GameApplication {
 
         _inventoryHud = new InventoryHud(_inventory);
         _inventoryHud.build();
+
+        _hud.updateHP(_currentHP, _maxHP);
     }
 
     @Override

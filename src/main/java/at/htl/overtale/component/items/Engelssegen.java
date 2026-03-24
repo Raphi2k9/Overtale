@@ -2,18 +2,13 @@ package at.htl.overtale.component.items;
 
 public class Engelssegen extends Item {
 
-    private final int _healAmount;
-
     public Engelssegen() {
-        super("Engelssegen", "Heilt 10 HP. Ein sanftes göttliches Leuchten.");
-        _healAmount = 10;
+        super("Engelssegen", "Segen von einem Enger, deine Angriffe werden um 10 verstärkt", 10, 0);
     }
 
     @Override
     public String use(Inventory inventory, int slot) {
         inventory.removeItem(slot);
-        return "Du benutzt den Engelssegen und heilest " + _healAmount + " HP!";
+        return "Du benutzt die Engelssegen und dein Angriff wurde um 10 gesteigert";
     }
-
-    public int getHealAmount() { return _healAmount; }
 }

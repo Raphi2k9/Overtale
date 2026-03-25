@@ -31,6 +31,8 @@ public class GameApp extends GameApplication {
     private Entity _enemy;
     private int _currentHP = 20;
     private int _maxHP = 40;
+    private int _enemyHP = 20;
+    private int _enemyMaxHP = 20;
 
     private boolean _inDodgePhase = false;
     private TimerAction _dodgeTimerAction;
@@ -41,6 +43,8 @@ public class GameApp extends GameApplication {
         settings.setVersion("0.1");
         settings.setWidth(800);
         settings.setHeight(600);
+        settings.setFullScreenAllowed(true);
+        settings.setFullScreenFromStart(true);
     }
 
     @Override
@@ -193,6 +197,13 @@ public class GameApp extends GameApplication {
         }
         _hud.hideHeart();
         _hud.clearDodgeBullets();
+        _enemyHP = Math.max(0, _enemyHP - 2);
+        _hud.updateEnemyHP(_enemyHP, _enemyMaxHP);
+        if (_enemyHP <= 0) {
+            _enemy.removeFromWorld();
+            _hud.hideAll();
+            return;
+        }
         _hud.showHUD();
     }
 
@@ -255,6 +266,7 @@ public class GameApp extends GameApplication {
         _inventoryHud.build();
 
         _hud.updateHP(_currentHP, _maxHP);
+        _hud.updateEnemyHP(_enemyHP, _enemyMaxHP);
     }
 
     @Override

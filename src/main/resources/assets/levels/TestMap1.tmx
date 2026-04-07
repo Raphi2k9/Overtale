@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="1">
- <tileset firstgid="1" name="Path_combined_-1" tilewidth="32" tileheight="32" tilecount="8" columns="8">
-  <image source="Path_combined_-1.png" width="256" height="32"/>
+ <tileset firstgid="1" name="path_tiles" tilewidth="32" tileheight="32" tilecount="8" columns="8">
+   <image source="path_tiles.png" width="256" height="32"/>
  </tileset>
  <layer id="1" name="Tile Layer 1" width="30" height="30">
   <data encoding="csv">

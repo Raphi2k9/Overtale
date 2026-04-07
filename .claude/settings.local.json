@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn clean:*)",
+      "Read(//usr/share/maven/bin/**)",
+      "Read(//home/daniel/.sdkman/candidates/maven/current/bin/**)",
+      "Read(//usr/**)",
+      "Bash($MVN clean:*)",
+      "Bash(/home/daniel/.m2/wrapper/dists/apache-maven-3.8.5-bin/5i5jha092a3i37g0paqnfr15e0/apache-maven-3.8.5/bin/mvn clean:*)",
+      "Bash(./mvnw clean:*)",
+      "Bash(jar tf:*)",
+      "Bash(jar xf:*)",
+      "Bash(mkdir -p /tmp/fxgl-src)",
+      "Read(//tmp/**)",
+      "Read(//home/daniel/.m2/repository/com/github/almasb/**)",
+      "Bash(mkdir:*)"
+    ]
+  }
+}

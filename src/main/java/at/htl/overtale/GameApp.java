@@ -239,8 +239,8 @@ public class GameApp extends GameApplication {
         getGameScene().getViewport().setLazy(true);
         getGameScene().getViewport().setBounds(
                 0,0,
-                10 * 32,
-                8 * 32
+                30 * 32,
+                30 * 32
         );
 
         _inventory = new Inventory();

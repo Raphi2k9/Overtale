@@ -11,7 +11,6 @@ import at.htl.overtale.hud.OvertaleHud;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.geometry.Point2D;
@@ -231,9 +230,18 @@ public class GameApp extends GameApplication {
     @Override
     protected void initGame() {
         getGameWorld().addEntityFactory(new GameEntityFactory());
+        setLevelFromMap("TestMap1.tmx");
         _player = spawn("player", 400, 300);
-        _npc = spawn("npc", 200, 250);
-        _enemy = spawn("enemy", 550, 300);
+        //_npc = spawn("npc", 200, 250);
+        //_enemy = spawn("enemy", 550, 300);
+
+        getGameScene().getViewport().bindToEntity(_player, getAppWidth()/2, getAppHeight()/2);
+        getGameScene().getViewport().setLazy(true);
+        getGameScene().getViewport().setBounds(
+                0,0,
+                10 * 32,
+                8 * 32
+        );
 
         _inventory = new Inventory();
         _inventory.addItem(new Engelssegen());

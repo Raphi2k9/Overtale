@@ -138,14 +138,14 @@ public class GameApp extends GameApplication {
                 handleBattleMenuConfirm();
             } else if (!_dialogManager.isActive() && !_inDodgePhase) {
                 // Welt-Interaktion
-                if (_player.distanceBBox(_npc) < 60) {
+                if (_npc != null && _player.distanceBBox(_npc) < 60) {
                     _dialogManager.startDialog(java.util.List.of(
                         "Howdy! I'm Flowey.",
                         "Flowey the Flower!",
                         "Down here, LOVE is shared through...",
                         "...little white friendliness pellets!"
                     ));
-                } else if (_player.distanceBBox(_enemy) < 60) {
+                } else if (_enemy != null && _player.distanceBBox(_enemy) < 60) {
                     _hud.showHUD();
                 }
             }
@@ -232,8 +232,8 @@ public class GameApp extends GameApplication {
         getGameWorld().addEntityFactory(new GameEntityFactory());
         setLevelFromMap("TestMap1.tmx");
         _player = spawn("player", 400, 300);
-        //_npc = spawn("npc", 200, 250);
-        //_enemy = spawn("enemy", 550, 300);
+        _npc = spawn("npc", 200, 250);
+        _enemy = spawn("enemy", 550, 300);
 
         getGameScene().getViewport().bindToEntity(_player, getAppWidth()/2, getAppHeight()/2);
         getGameScene().getViewport().setLazy(true);

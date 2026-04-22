@@ -32,6 +32,7 @@ public class GameApp extends GameApplication {
     private int _maxHP = 40;
     private int _enemyHP = 20;
     private int _enemyMaxHP = 20;
+    private int _bonusDamage = 0;
 
     private boolean _inDodgePhase = false;
     private TimerAction _dodgeTimerAction;
@@ -157,10 +158,14 @@ public class GameApp extends GameApplication {
         at.htl.overtale.component.items.Item item = _inventory.getItem(slot);
         if (item != null) {
             int heal = item.getHealAmount();
+            int dmg = item.getDamageAmount();
             String msg = _inventoryHud.useSelected();
             if (heal > 0) {
                 _currentHP = Math.min(_currentHP + heal, _maxHP);
                 _hud.updateHP(_currentHP, _maxHP);
+            }
+            if (dmg > 0) {
+                _bonusDamage += dmg;
             }
             _inventoryHud.hide();
             _dialogManager.startDialog(java.util.List.of(msg), () -> _hud.showHUD());
@@ -196,7 +201,8 @@ public class GameApp extends GameApplication {
         }
         _hud.hideHeart();
         _hud.clearDodgeBullets();
-        _enemyHP = Math.max(0, _enemyHP - 2);
+        _enemyHP = Math.max(0, _enemyHP - 2 - _bonusDamage);
+        _bonusDamage = 0;
         _hud.updateEnemyHP(_enemyHP, _enemyMaxHP);
         if (_enemyHP <= 0) {
             _enemy.removeFromWorld();

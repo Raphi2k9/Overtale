@@ -179,6 +179,8 @@ public class GameApp extends GameApplication {
         } else if (selected == 2) { // ITEM
             _inventoryHud.show();
             _hud.hideAll();
+        } else if (selected == 3) { // MERCY
+            _hud.hideAll();
         }
     }
 

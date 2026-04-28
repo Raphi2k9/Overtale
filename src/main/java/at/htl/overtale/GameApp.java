@@ -1,7 +1,7 @@
 package at.htl.overtale;
 
-import at.htl.overtale.component.items.Engelssegen;
-import at.htl.overtale.component.items.GoldenerNektar;
+import at.htl.overtale.component.LootChestComponent;
+import at.htl.overtale.component.items.*;
 import at.htl.overtale.component.items.Inventory;
 import at.htl.overtale.entity.EntityType;
 import at.htl.overtale.entity.GameEntityFactory;
@@ -11,6 +11,7 @@ import at.htl.overtale.hud.OvertaleHud;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.geometry.Point2D;
@@ -28,6 +29,7 @@ public class GameApp extends GameApplication {
     private Entity _player;
     private Entity _npc;
     private Entity _enemy;
+    private java.util.List<Entity> _chests = new java.util.ArrayList<>();
     private int _currentHP = 20;
     private int _maxHP = 40;
     private int _enemyHP = 20;
@@ -138,8 +140,11 @@ public class GameApp extends GameApplication {
             } else if (!_inDodgePhase && _hud.isBattleMenuVisible()) {
                 handleBattleMenuConfirm();
             } else if (!_dialogManager.isActive() && !_inDodgePhase) {
-                // Welt-Interaktion
-                if (_npc != null && _player.distanceBBox(_npc) < 60) {
+                // Truhe öffnen?
+                Entity nearChest = getNearbyChest();
+                if (nearChest != null) {
+                    handleOpenChest(nearChest);
+                } else if (_npc != null && _player.distanceBBox(_npc) < 60) {
                     _dialogManager.startDialog(java.util.List.of(
                         "Howdy! I'm Flowey.",
                         "Flowey the Flower!",
@@ -151,6 +156,49 @@ public class GameApp extends GameApplication {
                 }
             }
         });
+    }
+
+    private Entity getNearbyChest() {
+        for (Entity chest : _chests) {
+            LootChestComponent lcc = chest.getComponent(LootChestComponent.class);
+            if (!lcc.isOpened() && _player.distanceBBox(chest) < 60) {
+                return chest;
+            }
+        }
+        return null;
+    }
+
+    private void handleOpenChest(Entity chest) {
+        LootChestComponent lcc = chest.getComponent(LootChestComponent.class);
+        java.util.List<at.htl.overtale.component.items.Item> loot = lcc.open();
+
+        // Optik: Truhe wird grau (leer)
+        javafx.scene.Node view = chest.getViewComponent().getChildren().get(0);
+        if (view instanceof javafx.scene.layout.StackPane sp) {
+            javafx.scene.shape.Rectangle rect =
+                (javafx.scene.shape.Rectangle) sp.getChildren().get(0);
+            rect.setFill(javafx.scene.paint.Color.web("#555555"));
+            rect.setStroke(javafx.scene.paint.Color.GRAY);
+            javafx.scene.text.Text label =
+                (javafx.scene.text.Text) sp.getChildren().get(1);
+            label.setText("");
+        }
+
+        if (loot.isEmpty()) {
+            _dialogManager.startDialog(java.util.List.of("Die Truhe ist leer."));
+            return;
+        }
+
+        java.util.List<String> messages = new java.util.ArrayList<>();
+        for (at.htl.overtale.component.items.Item item : loot) {
+            if (_inventory.addItem(item)) {
+                messages.add("Du hast erhalten: " + item.getName());
+            } else {
+                messages.add("Inventar voll! " + item.getName() + " passt nicht rein.");
+            }
+        }
+        _inventoryHud.refresh();
+        _dialogManager.startDialog(messages);
     }
 
     private void handleItemUse() {
@@ -255,6 +303,14 @@ public class GameApp extends GameApplication {
         _inventory.addItem(new Engelssegen());
         _inventory.addItem(new Engelssegen());
         _inventory.addItem(new GoldenerNektar());
+
+        // Loot-Truhen
+        _chests.add(spawn("lootChest",
+            new SpawnData(300, 200).put("items", new Item[]{new GoldenerNektar(), new Engelssegen()})));
+        _chests.add(spawn("lootChest",
+            new SpawnData(500, 150).put("items", new Item[]{new Himmelsrelikt()})));
+        _chests.add(spawn("lootChest",
+            new SpawnData(150, 400).put("items", new Item[]{new Sonnenessenz(), new GoldenerNektar()})));
     }
 
     @Override

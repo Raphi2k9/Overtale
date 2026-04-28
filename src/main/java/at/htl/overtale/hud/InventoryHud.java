@@ -174,7 +174,7 @@ public class InventoryHud {
         updateDesc();
     }
 
-    private void refresh() {
+    public void refresh() {
         for (int i = 0; i < Inventory.SIZE; i++) {
             Item item = _inventory.getItem(i);
             _slotTexts[i].setText(item != null ? item.getName() : "---");

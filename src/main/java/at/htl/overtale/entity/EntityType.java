@@ -4,5 +4,6 @@ public enum EntityType {
     PLAYER,
     ENEMY,
     BULLET,
-    NPC
+    NPC,
+    LOOT_CHEST
 }

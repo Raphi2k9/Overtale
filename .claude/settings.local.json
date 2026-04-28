@@ -13,7 +13,9 @@
       "Bash(mkdir -p /tmp/fxgl-src)",
       "Read(//tmp/**)",
       "Read(//home/daniel/.m2/repository/com/github/almasb/**)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(mvn compile *)",
+      "Bash(./mvnw compile *)"
     ]
   }
 }

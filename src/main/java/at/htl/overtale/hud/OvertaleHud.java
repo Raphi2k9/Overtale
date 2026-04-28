@@ -161,9 +161,9 @@ public class OvertaleHud {
     private void buildButtons() {
         double btnW   = 140;
         double btnH   = 38;
-        double startX = 30;
+        double gap    = 30;
+        double startX = (SCREEN_W - 4 * btnW - 3 * gap) / 2;
         double btnY   = HUD_Y + 90;
-        double gap    = 10;
 
         for (int i = 0; i < 4; i++) {
             double x = startX + i * (btnW + gap);

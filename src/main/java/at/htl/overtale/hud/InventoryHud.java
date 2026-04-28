@@ -27,13 +27,13 @@ import javafx.scene.text.Text;
 public class InventoryHud {
 
     private static final double SCREEN_W  = 800;
-    private static final double INV_Y     = 435;   // Y-Start der Inventarbox
-    private static final double BOX_H     = 155;   // Höhe der Inventarbox
+    private static final double INV_Y     = 390;   // Y-Start der Inventarbox
+    private static final double BOX_H     = 200;   // Höhe der Inventarbox
     private static final double SLOT_W    = 330;
     private static final double SLOT_H    = 28;
     private static final double COL_GAP   = 370;   // Abstand zwischen den Spalten
     private static final double START_X   = 45;
-    private static final double START_Y   = INV_Y + 8;
+    private static final double START_Y   = INV_Y + 30; // Platz für Titel
     private static final double ROW_GAP   = 6;
 
     private final Inventory _inventory;
@@ -89,17 +89,23 @@ public class InventoryHud {
             _inventoryPane.getChildren().add(text);
         }
 
-        // Beschreibungstext (unten in der Box)
+        // Trennlinie zwischen Slots und Beschreibung (8px unter dem letzten Slot)
+        Rectangle separator = new Rectangle(SCREEN_W - 90, 1, Color.web("#444444"));
+        separator.setTranslateX(35);
+        separator.setTranslateY(INV_Y + BOX_H - 32);
+        _inventoryPane.getChildren().add(separator);
+
+        // Beschreibungstext
         _descText = makeText("", 13);
         _descText.setTranslateX(35);
-        _descText.setTranslateY(INV_Y + BOX_H - 28);
+        _descText.setTranslateY(INV_Y + BOX_H - 18);
         _inventoryPane.getChildren().add(_descText);
 
         // Steuerungs-Hinweis
         _hintText = makeText("Z: Benutzen   Q: Wegwerfen   X: Zurück", 11);
         _hintText.setFill(Color.GRAY);
         _hintText.setTranslateX(35);
-        _hintText.setTranslateY(INV_Y + BOX_H - 10);
+        _hintText.setTranslateY(INV_Y + BOX_H - 6);
         _inventoryPane.getChildren().add(_hintText);
 
         FXGL.addUINode(_inventoryPane);

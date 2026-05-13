@@ -1,5 +1,6 @@
 package at.htl.overtale.entity;
 
+import at.htl.overtale.component.BossComponent;
 import at.htl.overtale.component.BulletComponent;
 import at.htl.overtale.component.LootChestComponent;
 import at.htl.overtale.component.items.Item;
@@ -60,6 +61,24 @@ public class GameEntityFactory implements EntityFactory {
                 .viewWithBBox(view)
                 .with(new CollidableComponent(true))
                 .with(new LootChestComponent(items))
+                .zIndex(1)
+                .build();
+    }
+
+    @Spawns("boss")
+    public Entity newBoss(SpawnData data) {
+        Color color  = data.get("color");
+        Color stroke = data.get("stroke");
+        int bossIndex = data.get("bossIndex");
+
+        Rectangle body = new Rectangle(44, 44, color);
+        body.setStroke(stroke);
+        body.setStrokeWidth(3);
+
+        return FXGL.entityBuilder(data)
+                .type(EntityType.BOSS)
+                .viewWithBBox(body)
+                .with(new BossComponent(bossIndex))
                 .zIndex(1)
                 .build();
     }

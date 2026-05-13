@@ -23,6 +23,7 @@ public class OvertaleHud {
     // --- UI Nodes ---
     private Text _hpText;
     private Text _enemyHpText;
+    private Text _enemyNameText;
     private Text _dialogText;
     private Rectangle _hpBar;
     private Rectangle _enemyHpBar;
@@ -132,10 +133,10 @@ public class OvertaleHud {
         _battleMenuPane.getChildren().add(_hpText);
 
         // Gegner-HP (rechte Seite)
-        Text enemyLabel = makeText("ENEMY", 18);
-        enemyLabel.setTranslateX(470);
-        enemyLabel.setTranslateY(HUD_Y + 28);
-        _battleMenuPane.getChildren().add(enemyLabel);
+        _enemyNameText = makeText("ENEMY", 18);
+        _enemyNameText.setTranslateX(470);
+        _enemyNameText.setTranslateY(HUD_Y + 28);
+        _battleMenuPane.getChildren().add(_enemyNameText);
 
         Text enemyHpLabel = makeText("HP", 16);
         enemyHpLabel.setTranslateX(470);
@@ -294,6 +295,10 @@ public class OvertaleHud {
         double ratio = (double) current / max;
         _hpBar.setWidth(120 * ratio);
         _hpBar.setFill(ratio > 0.5 ? Color.web("#FFFF00") : Color.web("#FF6600"));
+    }
+
+    public void setEnemyName(String name) {
+        _enemyNameText.setText(name);
     }
 
     public void updateEnemyHP(int current, int max) {

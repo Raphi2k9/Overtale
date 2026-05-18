@@ -15,7 +15,8 @@
       "Read(//home/daniel/.m2/repository/com/github/almasb/**)",
       "Bash(mkdir:*)",
       "Bash(mvn compile *)",
-      "Bash(./mvnw compile *)"
+      "Bash(./mvnw compile *)",
+      "Bash(git pull *)"
     ]
   }
 }

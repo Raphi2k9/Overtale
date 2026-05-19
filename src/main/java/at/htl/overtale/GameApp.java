@@ -17,8 +17,12 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
@@ -27,6 +31,20 @@ import java.util.List;
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GameApp extends GameApplication {
+
+    // ── NPC dialogs ───────────────────────────────────────────────────────────
+
+    private static final List<String> SANS_DIALOG = List.of(
+        "Heya. Ich bin Sans. Sans der Skelett.",
+        "Du solltest vorsichtig sein hier oben... die Archons spielen nicht.",
+        "Halo-Donut gefällig? Kostet nur ein bisschen SOUL."
+    );
+
+    private static final List<String> PAPYRUS_DIALOG = List.of(
+        "NYYYYEH HEH HEH! ICH BIN DER GROSSE PAPYRUS!",
+        "Ich trainiere gerade zum Engel! Ist das nicht wunderbar?!",
+        "Sei vorsichtig — der Richter wartet oben auf dich!"
+    );
 
     // ── Bosses ────────────────────────────────────────────────────────────────
 
@@ -48,7 +66,7 @@ public class GameApp extends GameApplication {
                 "Die Finsternis... weicht zurück..."
             ),
             BossPattern.RANDOM_TARGET, 7.0, 1.4,
-            640, 200,
+            416, 1376,
             new Engelssegen()
         ),
         new BossData(
@@ -69,11 +87,11 @@ public class GameApp extends GameApplication {
                 "Nimm sie... sie wird dir auf deinem weiteren Weg dienen."
             ),
             BossPattern.RAIN, 9.0, 0.75,
-            200, 580,
+            416, 576,
             new HeiligesSchwert()
         ),
         new BossData(
-            "Der Richter", 60,
+            "Der Richter", 30,
             List.of(
                 "Hier endet deine Reise, Sterblicher.",
                 "Ich bin der Richter dieser Welt.",
@@ -93,10 +111,22 @@ public class GameApp extends GameApplication {
                 "LEVEL 1 ABGESCHLOSSEN!"
             ),
             BossPattern.CROSSFIRE, 12.0, 0.55,
-            650, 580,
+            416, 192,
             new HeiliigeSchriftrolle()
         )
     };
+
+    // ── Der Richter phase data ────────────────────────────────────────────────
+
+    private static final String[] RICHTER_PHASE_NAMES = {
+        "Urteil",
+        "Kreuzgericht",
+        "Heiliger Regen",
+        "Mauern des Himmels",
+        "Göttliches Gericht"
+    };
+    private static final double[] RICHTER_DURATIONS = {5.0, 4.0, 5.0, 6.0, 6.0};
+    private static final double[] RICHTER_INTERVALS = {0.6, 0.4, 0.15, 0.5, 0.4};
 
     // ── State ─────────────────────────────────────────────────────────────────
 
@@ -105,7 +135,8 @@ public class GameApp extends GameApplication {
     private InventoryHud     _inventoryHud;
     private Inventory        _inventory;
     private Entity           _player;
-    private Entity           _npc;
+    private Entity           _sans;
+    private Entity           _papyrus;
     private List<Entity>     _bossEntities = new ArrayList<>();
     private List<Entity>     _chests       = new ArrayList<>();
 
@@ -118,7 +149,12 @@ public class GameApp extends GameApplication {
     private int _bonusDamage      = 0;
 
     private boolean     _inDodgePhase    = false;
+    private boolean     _isGameOver      = false;
+    private int         _dodgeRound      = 0;
+    private double      _richterCorridorOffset = 110;
     private TimerAction _dodgeTimerAction;
+    private TimerAction _richterBoltTimerAction;
+    private List<Node>  _gameOverNodes   = List.of();
 
     // ── Settings ──────────────────────────────────────────────────────────────
 
@@ -226,10 +262,20 @@ public class GameApp extends GameApplication {
                     handleOpenChest(nearChest);
                 } else if (nearBoss != null) {
                     startBossFight(nearBoss);
-                } else if (_npc != null && _player.distanceBBox(_npc) < 60) {
-                    _dialogManager.startDialog(getNpcDialog());
+                } else if (_sans != null && _player.distanceBBox(_sans) < 60) {
+                    _dialogManager.startDialog(SANS_DIALOG);
+                } else if (_papyrus != null && _player.distanceBBox(_papyrus) < 60) {
+                    _dialogManager.startDialog(PAPYRUS_DIALOG);
                 }
             }
+        });
+
+        onKey(KeyCode.R, () -> {
+            if (!_isGameOver) return;
+            _gameOverNodes.forEach(n -> getGameScene().removeUINode(n));
+            _isGameOver = false;
+            _currentHP  = _maxHP;
+            getGameController().startNewGame();
         });
     }
 
@@ -237,41 +283,62 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initGame() {
+        _bossEntities.clear();
+        _chests.clear();
+        _currentBossIndex      = -1;
+        _bossesDefeated        = 0;
+        _enemyHP               = 0;
+        _enemyMaxHP            = 0;
+        _bonusDamage           = 0;
+        _inDodgePhase          = false;
+        _dodgeRound            = 0;
+        _dodgeTimerAction      = null;
+        _richterBoltTimerAction = null;
+
         getGameWorld().addEntityFactory(new GameEntityFactory());
         setLevelFromMap("TestMap1.tmx");
 
-        _player = spawn("player", 420, 380);
-        _npc    = spawn("npc",    370, 380);
+        // col 13, row 47 → center of entry corridor, near bottom
+        _player  = spawn("player", 416, 1504);
+        // col 5, row 25 → left side of horizontal corridor
+        _sans    = spawn("npc", 160, 800);
+        // col 21, row 25 → right side of horizontal corridor
+        _papyrus = spawn("npc", 672, 800);
 
-        // Boss 1 – purple, north-east
-        _bossEntities.add(spawn("boss", new SpawnData(640, 200)
+        // Finsternisgeist – purple, entry corridor (col 13, row 43)
+        _bossEntities.add(spawn("boss", new SpawnData(416, 1376)
                 .put("color", Color.web("#6B1FA3"))
                 .put("stroke", Color.web("#CE93D8"))
                 .put("bossIndex", 0)));
 
-        // Boss 2 – dark blue, south-west
-        _bossEntities.add(spawn("boss", new SpawnData(200, 580)
+        // Schattenwächter – dark blue, second vertical corridor mid-ascent (col 13, row 18)
+        _bossEntities.add(spawn("boss", new SpawnData(416, 576)
                 .put("color", Color.web("#1A237E"))
                 .put("stroke", Color.web("#82B1FF"))
                 .put("bossIndex", 1)));
 
-        // Boss 3 – dark slate with gold border, south-east
-        _bossEntities.add(spawn("boss", new SpawnData(650, 580)
+        // Der Richter – dark slate with gold border, upper platform (col 13, row 6)
+        _bossEntities.add(spawn("boss", new SpawnData(416, 192)
                 .put("color", Color.web("#37474F"))
                 .put("stroke", Color.web("#FFD700"))
                 .put("bossIndex", 2)));
 
-        // Two starter chests with weak healing items (no starting inventory)
-        _chests.add(spawn("lootChest", new SpawnData(520, 280)
+        // Chest 1 – entry corridor early reward (col 13, row 40)
+        _chests.add(spawn("lootChest", new SpawnData(416, 1280)
                 .put("items", new Item[]{new Sonnenessenz()})));
-        _chests.add(spawn("lootChest", new SpawnData(320, 500)
+        // Chest 2 – left end of horizontal corridor (col 3, row 26)
+        _chests.add(spawn("lootChest", new SpawnData(96, 832)
                 .put("items", new Item[]{new Engelstraene()})));
+        // Chest 3 – right end of horizontal corridor (col 22, row 26)
+        _chests.add(spawn("lootChest", new SpawnData(704, 832)
+                .put("items", new Item[]{new GoldenerNektar()})));
 
         _inventory = new Inventory();
 
         getGameScene().getViewport().bindToEntity(_player, getAppWidth() / 2, getAppHeight() / 2);
         getGameScene().getViewport().setLazy(true);
-        getGameScene().getViewport().setBounds(0, 0, 30 * 32, 30 * 32);
+        // map is 30×50 tiles → 960×1600 px
+        getGameScene().getViewport().setBounds(0, 0, 30 * 32, 50 * 32);
     }
 
     @Override
@@ -283,7 +350,9 @@ public class GameApp extends GameApplication {
                         if (_inDodgePhase) return;
                         bullet.removeFromWorld();
                         _currentHP -= 2;
+                        if (_currentHP < 0) _currentHP = 0;
                         _hud.updateHP(_currentHP, _maxHP);
+                        checkPlayerDead();
                     }
                 }
         );
@@ -316,7 +385,14 @@ public class GameApp extends GameApplication {
             _hud.updateDodgeBullets(tpf);
             if (_hud.checkAndRemoveCollidingBullet()) {
                 _currentHP -= 2;
+                if (_currentHP < 0) _currentHP = 0;
                 _hud.updateHP(_currentHP, _maxHP);
+                checkPlayerDead();
+            } else if (_hud.checkAndRemoveCollidingBolt()) {
+                _currentHP -= 5;
+                if (_currentHP < 0) _currentHP = 0;
+                _hud.updateHP(_currentHP, _maxHP);
+                checkPlayerDead();
             }
         }
     }
@@ -326,6 +402,7 @@ public class GameApp extends GameApplication {
     private void startBossFight(Entity bossEntity) {
         BossComponent bc = bossEntity.getComponent(BossComponent.class);
         _currentBossIndex = bc.getBossIndex();
+        _dodgeRound = 0;
         BossData boss = BOSSES[_currentBossIndex];
 
         _enemyMaxHP = boss.maxHp();
@@ -338,25 +415,72 @@ public class GameApp extends GameApplication {
     }
 
     private void startDodgePhase() {
+        if (_currentBossIndex == 2) {
+            int phase = richterPhaseIndex();
+            String announce = "Runde " + (_dodgeRound + 1) + " — " + RICHTER_PHASE_NAMES[phase] + "...";
+            _hud.showAnnouncement(announce);
+            getGameTimer().runOnceAfter(this::beginRichterDodge, Duration.seconds(1.5));
+        } else {
+            beginStandardDodge();
+        }
+    }
+
+    private void beginStandardDodge() {
         _inDodgePhase = true;
         _hud.showBattleBoxOnly();
         _hud.showHeart();
-
         BossData boss = BOSSES[_currentBossIndex];
         _dodgeTimerAction = getGameTimer().runAtInterval(
                 this::spawnBulletsForPattern, Duration.seconds(boss.bulletInterval()));
         getGameTimer().runOnceAfter(this::endDodgePhase, Duration.seconds(boss.fightDuration()));
     }
 
-    private void endDodgePhase() {
+    private void beginRichterDodge() {
+        if (_isGameOver) return;
+        _inDodgePhase = true;
+        _hud.showBattleBoxOnly();
+        _hud.showHeart();
+
+        int phase = richterPhaseIndex();
+        _dodgeTimerAction = getGameTimer().runAtInterval(
+                this::spawnRichterPhase, Duration.seconds(RICHTER_INTERVALS[phase]));
+        getGameTimer().runOnceAfter(this::endDodgePhase, Duration.seconds(RICHTER_DURATIONS[phase]));
+
+        if (phase == 3) {
+            _richterCorridorOffset = (OvertaleHud.BATTLE_INNER_H - 80) / 2.0;
+            getGameTimer().runOnceAfter(
+                    () -> _richterCorridorOffset = 30.0, Duration.seconds(2.0));
+            getGameTimer().runOnceAfter(
+                    () -> _richterCorridorOffset = OvertaleHud.BATTLE_INNER_H - 80 - 30,
+                    Duration.seconds(4.0));
+        }
+        if (phase == 4) {
+            _richterBoltTimerAction = getGameTimer().runAtInterval(
+                    this::spawnRichterBolt, Duration.seconds(1.5));
+        }
+    }
+
+    private void stopDodgePhase() {
         if (!_inDodgePhase) return;
         _inDodgePhase = false;
         if (_dodgeTimerAction != null) {
             _dodgeTimerAction.expire();
             _dodgeTimerAction = null;
         }
+        if (_richterBoltTimerAction != null) {
+            _richterBoltTimerAction.expire();
+            _richterBoltTimerAction = null;
+        }
         _hud.hideHeart();
         _hud.clearDodgeBullets();
+    }
+
+    private void endDodgePhase() {
+        stopDodgePhase();
+        checkPlayerDead();
+        if (_isGameOver) return;
+
+        if (_currentBossIndex == 2) _dodgeRound++;
 
         int baseDamage = 5;
         _enemyHP = Math.max(0, _enemyHP - baseDamage - _bonusDamage);
@@ -472,6 +596,102 @@ public class GameApp extends GameApplication {
         return new Point2D(hcx - fromX, hcy - fromY).normalize().multiply(speed);
     }
 
+    // ── Der Richter phase system ──────────────────────────────────────────────
+
+    /** Phase 0 at round 0, then cycles 1→4 for rounds 1, 2, 3, 4, 5→1, 6→2, … */
+    private int richterPhaseIndex() {
+        return (_dodgeRound == 0) ? 0 : ((_dodgeRound - 1) % 4) + 1;
+    }
+
+    private void spawnRichterPhase() {
+        if (!_inDodgePhase) return;
+        switch (richterPhaseIndex()) {
+            case 0 -> spawnRichterUrteil();
+            case 1 -> spawnRichterKreuzgericht();
+            case 2 -> spawnRichterHeiligerRegen();
+            case 3 -> spawnRichterMauern();
+            case 4 -> spawnRichterGoettlichesGericht();
+        }
+    }
+
+    /** Round 0 — Urteil: 4 bullets from all sides aimed at heart, speed 120. */
+    private void spawnRichterUrteil() {
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        double[][] origins = {
+            {ix + Math.random() * iw, iy - 8},
+            {ix + Math.random() * iw, iy + ih + 1},
+            {ix - 8,      iy + Math.random() * ih},
+            {ix + iw + 1, iy + Math.random() * ih}
+        };
+        for (double[] o : origins) {
+            Point2D dir = aimAtHeart(o[0], o[1], 120);
+            _hud.addDodgeBullet(o[0], o[1], dir.getX(), dir.getY());
+        }
+    }
+
+    /** Round 1 — Kreuzgericht: two diagonal streams crossing at 45°, speed 160. */
+    private void spawnRichterKreuzgericht() {
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        double diag = 160.0 / Math.sqrt(2);
+
+        // Stream 1: top-left half + left edge → down-right
+        _hud.addDodgeBullet(ix + Math.random() * (iw / 2), iy - 8,  diag,  diag);
+        _hud.addDodgeBullet(ix - 8, iy + Math.random() * (ih / 2),  diag,  diag);
+        // Stream 2: top-right half + right edge → down-left
+        _hud.addDodgeBullet(ix + iw / 2 + Math.random() * (iw / 2), iy - 8, -diag, diag);
+        _hud.addDodgeBullet(ix + iw + 8, iy + Math.random() * (ih / 2), -diag, diag);
+    }
+
+    /** Round 2 — Heiliger Regen: dense rain from top, speed 200. */
+    private void spawnRichterHeiligerRegen() {
+        double x = OvertaleHud.BATTLE_INNER_X + Math.random() * OvertaleHud.BATTLE_INNER_W;
+        _hud.addDodgeBullet(x, OvertaleHud.BATTLE_INNER_Y - 8, 0, 200);
+    }
+
+    /** Round 3 — Mauern des Himmels: walls from left+right with a shifting 80px corridor. */
+    private void spawnRichterMauern() {
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        double corridorTop = iy + _richterCorridorOffset;
+        double corridorBot = corridorTop + 80;
+        int steps = 8;
+        for (int i = 0; i < steps; i++) {
+            double y = iy + (i + 0.5) * (ih / steps);
+            if (y >= corridorTop && y <= corridorBot) continue;
+            _hud.addDodgeBullet(ix - 8,      y, 140, 0);
+            _hud.addDodgeBullet(ix + iw + 8, y, -140, 0);
+        }
+    }
+
+    /** Round 4 — Göttliches Gericht: dense crossfire from all sides at speed 180. */
+    private void spawnRichterGoettlichesGericht() {
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        double[][] origins = {
+            {ix + Math.random() * iw, iy - 8},
+            {ix + Math.random() * iw, iy - 8},
+            {ix + Math.random() * iw, iy + ih + 1},
+            {ix + Math.random() * iw, iy + ih + 1},
+            {ix - 8,      iy + Math.random() * ih},
+            {ix - 8,      iy + Math.random() * ih},
+            {ix + iw + 1, iy + Math.random() * ih},
+            {ix + iw + 1, iy + Math.random() * ih}
+        };
+        for (double[] o : origins) {
+            Point2D dir = aimAtHeart(o[0], o[1], 180);
+            _hud.addDodgeBullet(o[0], o[1], dir.getX(), dir.getY());
+        }
+    }
+
+    /** Richter bolt: 20×20 gold projectile from top center, speed 90, deals 5 damage. */
+    private void spawnRichterBolt() {
+        if (!_inDodgePhase) return;
+        double centerX = OvertaleHud.BATTLE_INNER_X + OvertaleHud.BATTLE_INNER_W / 2.0 - 10;
+        _hud.addRichterBolt(centerX, OvertaleHud.BATTLE_INNER_Y - 20, 0, 90);
+    }
+
     // ── Battle menu ───────────────────────────────────────────────────────────
 
     private void handleBattleMenuConfirm() {
@@ -519,14 +739,12 @@ public class GameApp extends GameApplication {
         List<Item> loot = lcc.open();
 
         // Grey out the chest visually
-        javafx.scene.Node view = chest.getViewComponent().getChildren().get(0);
+        Node view = chest.getViewComponent().getChildren().get(0);
         if (view instanceof javafx.scene.layout.StackPane sp) {
-            javafx.scene.shape.Rectangle rect =
-                    (javafx.scene.shape.Rectangle) sp.getChildren().get(0);
+            Rectangle rect = (Rectangle) sp.getChildren().get(0);
             rect.setFill(Color.web("#555555"));
             rect.setStroke(Color.GRAY);
-            javafx.scene.text.Text label =
-                    (javafx.scene.text.Text) sp.getChildren().get(1);
+            Text label = (Text) sp.getChildren().get(1);
             label.setText("");
         }
 
@@ -547,36 +765,33 @@ public class GameApp extends GameApplication {
         _dialogManager.startDialog(messages);
     }
 
-    // ── NPC dialog ────────────────────────────────────────────────────────────
+    // ── Death / game over ─────────────────────────────────────────────────────
 
-    private List<String> getNpcDialog() {
-        return switch (_bossesDefeated) {
-            case 0 -> List.of(
-                "Willkommen! Ich bin der Hüter dieses Ortes.",
-                "Drei Wächter bedrohen diese Welt:",
-                "Der Finsternisgeist (lila) im Norden...",
-                "Der Schattenwächter (blau) im Südwesten...",
-                "...und Der Richter (gold) im Südosten.",
-                "Drücke E in ihrer Nähe, um den Kampf zu beginnen.",
-                "In goldenen Truhen findest du nützliche Items."
-            );
-            case 1 -> List.of(
-                "Gut gemacht! Den Finsternisgeist hast du bezwungen.",
-                "Zwei Wächter warten noch. Der Schattenwächter ist schneller.",
-                "Pass auf die fallenden Kugeln auf und bewege dich seitwärts!"
-            );
-            case 2 -> List.of(
-                "Zwei von drei! Fast am Ziel.",
-                "Der Richter ist der mächtigste von allen.",
-                "Er greift von allen vier Seiten gleichzeitig an.",
-                "Nutze alle Items die du hast – du wirst sie brauchen."
-            );
-            default -> List.of(
-                "Du hast alle drei Wächter besiegt!",
-                "Das Licht kehrt in diese Welt zurück.",
-                "Du bist ein wahrhaftiger Held."
-            );
-        };
+    private void checkPlayerDead() {
+        if (_currentHP > 0) return;
+        if (_isGameOver) return;
+        _isGameOver = true;
+        stopDodgePhase();
+        _hud.hideAll();
+
+        Rectangle overlay = new Rectangle(800, 600, Color.color(0, 0, 0, 0.88));
+
+        Text gameOver = new Text("GAME OVER");
+        gameOver.setFont(Font.font(64));
+        gameOver.setFill(Color.RED);
+        gameOver.setX(400 - gameOver.getLayoutBounds().getWidth() / 2);
+        gameOver.setY(270);
+
+        Text restart = new Text("R — Neustart");
+        restart.setFont(Font.font(20));
+        restart.setFill(Color.WHITE);
+        restart.setX(400 - restart.getLayoutBounds().getWidth() / 2);
+        restart.setY(320);
+
+        getGameScene().addUINode(overlay);
+        getGameScene().addUINode(gameOver);
+        getGameScene().addUINode(restart);
+        _gameOverNodes = List.of(overlay, gameOver, restart);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -593,8 +808,9 @@ public class GameApp extends GameApplication {
 
     private Entity getNearbyBoss() {
         for (Entity boss : _bossEntities) {
+            if (!boss.isActive()) continue;
             BossComponent bc = boss.getComponent(BossComponent.class);
-            if (!bc.isDefeated() && boss.isActive() && _player.distanceBBox(boss) < 60) {
+            if (!bc.isDefeated() && _player.distanceBBox(boss) < 60) {
                 return boss;
             }
         }

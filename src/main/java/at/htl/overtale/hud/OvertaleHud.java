@@ -46,22 +46,25 @@ public class OvertaleHud {
     private int _selectedBtn = 0;
 
     // Layout
-    private static final double SCREEN_W    = 800;
-    private static final double SCREEN_H    = 600;
-    private static final double HUD_Y       = 430;
-    private static final double BATTLE_SIZE = 150;
-    private static final double DIALOG_Y    = 480;
+    private static final double SCREEN_W = 800;
+    private static final double SCREEN_H = 600;
+    private static final double HUD_Y    = 460;   // below the new 400×300 battle box (bottom at y=453)
+    private static final double DIALOG_Y = 480;
 
-    // Kampfkasten-Innenfläche (public für GameApp)
-    public static final double BATTLE_INNER_X = (SCREEN_W - BATTLE_SIZE) / 2;  // 325
-    public static final double BATTLE_INNER_Y = 63;
-    public static final double BATTLE_INNER_W = BATTLE_SIZE;
-    public static final double BATTLE_INNER_H = BATTLE_SIZE;
+    // Kampfkasten-Innenfläche 400×300, zentriert auf 800×600 (public für GameApp)
+    public static final double BATTLE_INNER_X = 200;
+    public static final double BATTLE_INNER_Y = 150;
+    public static final double BATTLE_INNER_W = 400;
+    public static final double BATTLE_INNER_H = 300;
     public static final int    HEART_SIZE      = 10;
 
     // Dodge-Kugeln (UI-Ebene, damit sie über dem schwarzen Hintergrund sichtbar sind)
     private final List<Rectangle> _dodgeBullets    = new ArrayList<>();
     private final List<double[]>  _dodgeBulletVels = new ArrayList<>();
+
+    // Richter-Blitze (größer, gold, 5 Schaden)
+    private final List<Rectangle> _richterBolts    = new ArrayList<>();
+    private final List<double[]>  _richterBoltVels = new ArrayList<>();
 
     public void build() {
         _hudPane        = new Pane();
@@ -84,12 +87,12 @@ public class OvertaleHud {
     }
 
     private void buildBattleBox() {
-        Rectangle border = new Rectangle(BATTLE_SIZE + 6, BATTLE_SIZE + 6);
+        Rectangle border = new Rectangle(BATTLE_INNER_W + 6, BATTLE_INNER_H + 6);
         border.setFill(Color.BLACK);
         border.setStroke(Color.WHITE);
         border.setStrokeWidth(3);
         border.setTranslateX(BATTLE_INNER_X - 3);
-        border.setTranslateY(60);
+        border.setTranslateY(BATTLE_INNER_Y - 3);
         _hudPane.getChildren().add(border);
     }
 
@@ -370,6 +373,20 @@ public class OvertaleHud {
             }
         }
         for (Rectangle r : toRemove) removeDodgeBullet(r);
+
+        List<Rectangle> boltsToRemove = new ArrayList<>();
+        for (int i = 0; i < _richterBolts.size(); i++) {
+            Rectangle b = _richterBolts.get(i);
+            double[] v = _richterBoltVels.get(i);
+            b.setTranslateX(b.getTranslateX() + v[0] * tpf);
+            b.setTranslateY(b.getTranslateY() + v[1] * tpf);
+            double bx = b.getTranslateX(), by = b.getTranslateY();
+            if (bx < BATTLE_INNER_X - 30 || bx > BATTLE_INNER_X + BATTLE_INNER_W + 30 ||
+                by < BATTLE_INNER_Y - 30 || by > BATTLE_INNER_Y + BATTLE_INNER_H + 30) {
+                boltsToRemove.add(b);
+            }
+        }
+        for (Rectangle r : boltsToRemove) removeRichterBolt(r);
     }
 
     /** Prüft Kollision Herz ↔ Kugeln, entfernt getroffene Kugel. @return true wenn getroffen. */
@@ -379,6 +396,50 @@ public class OvertaleHud {
             double bx = b.getTranslateX(), by = b.getTranslateY();
             if (bx < hx + HEART_SIZE && bx + 8 > hx && by < hy + HEART_SIZE && by + 8 > hy) {
                 removeDodgeBullet(b);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Zeigt Text sofort im Dialogfeld an (kein Typewriter, kein DialogManager). */
+    public void showAnnouncement(String text) {
+        if (_typewriterTimeline != null) _typewriterTimeline.stop();
+        _fullDialog = "* " + text;
+        _charIndex  = _fullDialog.length();
+        _dialogText.setText(_fullDialog);
+        showDialogOnly();
+    }
+
+    /** Fügt einen Richter-Blitz (20×20, gold) hinzu — gesonderte Liste für 5-Schaden-Kollision. */
+    public void addRichterBolt(double x, double y, double vx, double vy) {
+        Rectangle bolt = new Rectangle(20, 20, Color.web("#FFD700"));
+        bolt.setStroke(Color.web("#FFF176"));
+        bolt.setStrokeWidth(2);
+        bolt.setTranslateX(x);
+        bolt.setTranslateY(y);
+        int heartIdx = _hudPane.getChildren().indexOf(_heart);
+        _hudPane.getChildren().add(heartIdx, bolt);
+        _richterBolts.add(bolt);
+        _richterBoltVels.add(new double[]{vx, vy});
+    }
+
+    private void removeRichterBolt(Rectangle bolt) {
+        int idx = _richterBolts.indexOf(bolt);
+        if (idx >= 0) {
+            _hudPane.getChildren().remove(bolt);
+            _richterBolts.remove(idx);
+            _richterBoltVels.remove(idx);
+        }
+    }
+
+    /** @return true wenn ein Richter-Blitz das Herz getroffen hat (5 Schaden). */
+    public boolean checkAndRemoveCollidingBolt() {
+        double hx = _heart.getTranslateX(), hy = _heart.getTranslateY();
+        for (Rectangle b : new ArrayList<>(_richterBolts)) {
+            double bx = b.getTranslateX(), by = b.getTranslateY();
+            if (bx < hx + HEART_SIZE && bx + 20 > hx && by < hy + HEART_SIZE && by + 20 > hy) {
+                removeRichterBolt(b);
                 return true;
             }
         }
@@ -398,6 +459,9 @@ public class OvertaleHud {
         _hudPane.getChildren().removeAll(_dodgeBullets);
         _dodgeBullets.clear();
         _dodgeBulletVels.clear();
+        _hudPane.getChildren().removeAll(_richterBolts);
+        _richterBolts.clear();
+        _richterBoltVels.clear();
     }
 
     private Text makeText(String content, double size) {

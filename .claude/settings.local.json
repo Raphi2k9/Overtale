@@ -16,7 +16,12 @@
       "Bash(mkdir:*)",
       "Bash(mvn compile *)",
       "Bash(./mvnw compile *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(python3 *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api *)",
+      "Bash(mkdir *)",
+      "Bash(git rm *)"
     ]
   }
 }

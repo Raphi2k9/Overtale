@@ -7,43 +7,54 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
-/**
- * Zeigt das Inventar mit 8 Slots in einem 4×2 Raster an.
- *
- * Layout:
- *   [Slot 0]  [Slot 4]
- *   [Slot 1]  [Slot 5]
- *   [Slot 2]  [Slot 6]
- *   [Slot 3]  [Slot 7]
- *
- * Navigation:
- *   UP/DOWN  → Zeile (±1)
- *   LEFT/RIGHT → Spalte (±4)
- *   Z → Item benutzen
- *   X → Inventar schließen
- */
 public class InventoryHud {
 
-    private static final double SCREEN_W  = 800;
-    private static final double INV_Y     = 390;   // Y-Start der Inventarbox
-    private static final double BOX_H     = 200;   // Höhe der Inventarbox
-    private static final double SLOT_W    = 330;
-    private static final double SLOT_H    = 28;
-    private static final double COL_GAP   = 370;   // Abstand zwischen den Spalten
-    private static final double START_X   = 45;
-    private static final double START_Y   = INV_Y + 30; // Platz für Titel
-    private static final double ROW_GAP   = 6;
+    // ── Layout constants ──────────────────────────────────────────────────────
+
+    private static final double PANEL_X = 20;
+    private static final double PANEL_Y = 280;
+    private static final double PANEL_W = 760;
+    private static final double PANEL_H = 320;   // 38 + 4×44 + 64 + 42
+
+    // Section heights
+    private static final double TITLE_H = 38;
+    private static final double ROW_H   = 44;
+    private static final double DESC_H  = 64;
+    // Remaining hint section: PANEL_H - TITLE_H - 4*ROW_H - DESC_H = 42 px
+
+    // Section Y positions (absolute screen coords)
+    private static final double SLOTS_Y = PANEL_Y + TITLE_H;           // 318
+    private static final double DESC_Y  = SLOTS_Y + 4 * ROW_H;         // 494
+    private static final double HINT_Y  = DESC_Y + DESC_H;             // 558
+
+    // Two columns: 368 px each, 8 px gap, 8 px outer padding each side
+    // 8 + 368 + 8 + 368 + 8 = 760 ✓
+    private static final double COL0_X = PANEL_X + 8;                  // 28
+    private static final double COL1_X = COL0_X + 368 + 8;             // 404
+    private static final double COL_W  = 368;
+
+    // Slot image/text insets inside a column
+    private static final double ICON_INSET = 8;   // from column edge to image left
+    private static final double ICON_SIZE  = 32;
+    private static final double TEXT_INSET = ICON_INSET + ICON_SIZE + 8; // 48 px
+
+    // Colours
+    private static final Color GOLD_SEP = Color.color(0.8, 0.60, 0.00);
+    private static final Color SEL_FILL = Color.color(0.30, 0.25, 0.00);
+    private static final Color SEL_BDR  = Color.color(0.80, 0.65, 0.00, 0.90);
+    private static final Color EMPTY_FG = Color.web("#555555");
+
+    // ── State ─────────────────────────────────────────────────────────────────
 
     private final Inventory _inventory;
 
-    private Pane _inventoryPane;
+    private Pane        _inventoryPane;
     private Rectangle[] _slotBoxes = new Rectangle[Inventory.SIZE];
-    private Text[] _slotTexts = new Text[Inventory.SIZE];
-    private Text _descText;
-    private Text _hintText;
-    private Text _titleText;
+    private Text[]      _slotTexts = new Text[Inventory.SIZE];
+    private Text        _descText;
 
     private int selectedSlot = 0;
 
@@ -51,75 +62,104 @@ public class InventoryHud {
         _inventory = inventory;
     }
 
+    // ── Build ─────────────────────────────────────────────────────────────────
+
     public void build() {
         _inventoryPane = new Pane();
 
-        // Hintergrund
-        Rectangle bg = new Rectangle(SCREEN_W - 50, BOX_H, Color.BLACK);
-        bg.setStroke(Color.WHITE);
-        bg.setStrokeWidth(3);
-        bg.setTranslateX(25);
-        bg.setTranslateY(INV_Y);
+        // Panel background
+        Rectangle bg = new Rectangle(PANEL_W, PANEL_H, Color.color(0.05, 0.05, 0.05, 0.97));
+        bg.setTranslateX(PANEL_X);
+        bg.setTranslateY(PANEL_Y);
         _inventoryPane.getChildren().add(bg);
 
-        // Titel
-        _titleText = makeText("ITEM", 16);
-        _titleText.setTranslateX(35);
-        _titleText.setTranslateY(INV_Y + 22);
-        _titleText.setFill(Color.YELLOW);
-        _inventoryPane.getChildren().add(_titleText);
+        // Title "ITEM"
+        Text title = new Text("ITEM");
+        title.setFont(Font.font("Monospaced", FontWeight.BOLD, 18));
+        title.setFill(Color.YELLOW);
+        title.setTranslateX(COL0_X + 4);
+        title.setTranslateY(PANEL_Y + 26);
+        _inventoryPane.getChildren().add(title);
 
-        // 8 Slots: 4 Zeilen × 2 Spalten
+        // Separator: title → slots
+        addSeparator(SLOTS_Y);
+
+        // 8 slots in 4×2 grid (row = i%4, col = i/4)
         for (int i = 0; i < Inventory.SIZE; i++) {
-            int row = i % 4;
-            int col = i / 4;
-            double x = START_X + col * COL_GAP;
-            double y = START_Y + row * (SLOT_H + ROW_GAP);
+            int    row  = i % 4;
+            int    col  = i / 4;
+            double colX = col == 0 ? COL0_X : COL1_X;
+            double rowY = SLOTS_Y + row * ROW_H;
 
-            Rectangle box = new Rectangle(SLOT_W, SLOT_H, Color.BLACK);
-            box.setTranslateX(x);
-            box.setTranslateY(y);
+            // Slot background (transparent by default, gold when selected)
+            Rectangle box = new Rectangle(COL_W, ROW_H - 4, Color.TRANSPARENT);
+            box.setStrokeWidth(0);
+            box.setTranslateX(colX);
+            box.setTranslateY(rowY + 2);
             _slotBoxes[i] = box;
             _inventoryPane.getChildren().add(box);
 
-            Text text = makeText("---", 14);
-            text.setTranslateX(x + 6);
-            text.setTranslateY(y + SLOT_H - 7);
-            _slotTexts[i] = text;
-            _inventoryPane.getChildren().add(text);
+            // TODO: replace with ImageView when sprites are ready
+            // ImageView icon = new ImageView(FXGL.image("textures/items/" + item.getName() + ".png"));
+            // icon.setFitWidth(32); icon.setFitHeight(32);
+            Rectangle icon = new Rectangle(ICON_SIZE, ICON_SIZE, Color.color(0.15, 0.12, 0.05));
+            icon.setStroke(Color.color(0.6, 0.5, 0.1));
+            icon.setStrokeWidth(1);
+            icon.setArcWidth(4);
+            icon.setArcHeight(4);
+            icon.setTranslateX(colX + ICON_INSET);
+            icon.setTranslateY(rowY + 6);
+            _inventoryPane.getChildren().add(icon);
+
+            // Item name (truncated to 18 chars)
+            Text name = makeText("---", 14);
+            name.setFill(EMPTY_FG);
+            name.setTranslateX(colX + TEXT_INSET);
+            name.setTranslateY(rowY + 6 + 22);   // baseline roughly at icon vertical centre
+            _slotTexts[i] = name;
+            _inventoryPane.getChildren().add(name);
         }
 
-        // Trennlinie zwischen Slots und Beschreibung (8px unter dem letzten Slot)
-        Rectangle separator = new Rectangle(SCREEN_W - 90, 1, Color.web("#444444"));
-        separator.setTranslateX(35);
-        separator.setTranslateY(INV_Y + BOX_H - 32);
-        _inventoryPane.getChildren().add(separator);
+        // Separator: slots → description
+        addSeparator(DESC_Y);
 
-        // Beschreibungstext
-        _descText = makeText("", 13);
-        _descText.setTranslateX(35);
-        _descText.setTranslateY(INV_Y + BOX_H - 18);
-        _inventoryPane.getChildren().add(_descText);
+        // Description: word-wrapping Text inside a clipped Pane (fixed DESC_H height)
+        _descText = new Text("");
+        _descText.setFont(Font.font("Monospaced", 13));
+        _descText.setFill(Color.web("#CCCCCC"));
+        _descText.setWrappingWidth(PANEL_W - 40);   // auto word-wrap, never overflows horizontally
+        _descText.setTranslateX(0);
+        _descText.setTranslateY(14);                // baseline 14 px from pane top
 
-        // Steuerungs-Hinweis
-        _hintText = makeText("Z: Benutzen   Q: Wegwerfen   X: Zurück", 11);
-        _hintText.setFill(Color.GRAY);
-        _hintText.setTranslateX(35);
-        _hintText.setTranslateY(INV_Y + BOX_H - 6);
-        _inventoryPane.getChildren().add(_hintText);
+        Pane descPane = new Pane(_descText);
+        descPane.setTranslateX(COL0_X + 4);
+        descPane.setTranslateY(DESC_Y + 4);
+        // Clip to fixed height so description never pushes other elements
+        descPane.setClip(new Rectangle(PANEL_W - 40, DESC_H - 8));
+        _inventoryPane.getChildren().add(descPane);
+
+        // Separator: description → hints
+        addSeparator(HINT_Y);
+
+        // Hint bar
+        Text hint = makeText("Z: Benutzen    Q: Wegwerfen    X: Zurück", 12);
+        hint.setFill(Color.GRAY);
+        hint.setTranslateX(COL0_X + 4);
+        hint.setTranslateY(HINT_Y + 22);
+        _inventoryPane.getChildren().add(hint);
 
         FXGL.addUINode(_inventoryPane);
         _inventoryPane.setVisible(false);
     }
 
-    /** Öffnet das Inventar und aktualisiert die Anzeige. */
+    // ── Public API ────────────────────────────────────────────────────────────
+
     public void show() {
         refresh();
         highlightSlot(0);
         _inventoryPane.setVisible(true);
     }
 
-    /** Schließt das Inventar. */
     public void hide() {
         _inventoryPane.setVisible(false);
     }
@@ -129,8 +169,8 @@ public class InventoryHud {
     }
 
     /**
-     * Navigiert im Inventar.
-     * @param delta  -1 = hoch, +1 = runter, -4 = links, +4 = rechts
+     * Navigates the selection cursor.
+     * delta: -1 = up row, +1 = down row, -4 = left column, +4 = right column
      */
     public void navigate(int delta) {
         int next = selectedSlot + delta;
@@ -139,10 +179,6 @@ public class InventoryHud {
         }
     }
 
-    /**
-     * Benutzt das aktuell markierte Item.
-     * @return die Nachricht des Items, oder null wenn der Slot leer ist
-     */
     public String useSelected() {
         Item item = _inventory.getItem(selectedSlot);
         if (item == null) return null;
@@ -152,10 +188,6 @@ public class InventoryHud {
         return msg;
     }
 
-    /**
-     * Wirft das aktuell markierte Item weg (ohne es zu benutzen).
-     * @return Meldung, oder null wenn der Slot leer ist
-     */
     public String dropSelected() {
         Item item = _inventory.getItem(selectedSlot);
         if (item == null) return null;
@@ -167,30 +199,51 @@ public class InventoryHud {
 
     public int getSelectedSlot() { return selectedSlot; }
 
-    // --- private helpers ---
-
-    private void highlightSlot(int index) {
-        for (int i = 0; i < Inventory.SIZE; i++) {
-            _slotBoxes[i].setFill(Color.BLACK);
-            _slotTexts[i].setFill(Color.WHITE);
-        }
-        _slotBoxes[index].setFill(Color.web("#333300"));
-        _slotTexts[index].setFill(Color.YELLOW);
-        selectedSlot = index;
-        updateDesc();
-    }
-
     public void refresh() {
         for (int i = 0; i < Inventory.SIZE; i++) {
             Item item = _inventory.getItem(i);
-            _slotTexts[i].setText(item != null ? item.getName() : "---");
+            if (item != null) {
+                _slotTexts[i].setText(truncate(item.getName()));
+                _slotTexts[i].setFill(i == selectedSlot ? Color.YELLOW : Color.WHITE);
+            } else {
+                _slotTexts[i].setText("---");
+                _slotTexts[i].setFill(EMPTY_FG);
+            }
         }
+        updateDesc();
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private void highlightSlot(int index) {
+        for (int i = 0; i < Inventory.SIZE; i++) {
+            _slotBoxes[i].setFill(Color.TRANSPARENT);
+            _slotBoxes[i].setStroke(Color.TRANSPARENT);
+            _slotBoxes[i].setStrokeWidth(0);
+            _slotTexts[i].setFill(_inventory.getItem(i) != null ? Color.WHITE : EMPTY_FG);
+        }
+        _slotBoxes[index].setFill(SEL_FILL);
+        _slotBoxes[index].setStroke(SEL_BDR);
+        _slotBoxes[index].setStrokeWidth(1.5);
+        _slotTexts[index].setFill(Color.YELLOW);
+        selectedSlot = index;
         updateDesc();
     }
 
     private void updateDesc() {
         Item item = _inventory.getItem(selectedSlot);
         _descText.setText(item != null ? item.getDescription() : "");
+    }
+
+    private String truncate(String name) {
+        return name.length() > 18 ? name.substring(0, 17) + "…" : name;
+    }
+
+    private void addSeparator(double y) {
+        Rectangle sep = new Rectangle(PANEL_W - 16, 1, GOLD_SEP);
+        sep.setTranslateX(PANEL_X + 8);
+        sep.setTranslateY(y);
+        _inventoryPane.getChildren().add(sep);
     }
 
     private Text makeText(String content, double size) {

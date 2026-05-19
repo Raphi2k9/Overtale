@@ -98,6 +98,17 @@ Das Inventar hat **8 Slots** in einem 4×2-Raster. Items können genutzt oder we
 
 ---
 
+## NPCs
+
+Zwei NPC-Charaktere befinden sich im horizontalen Korridor und können mit `E` angesprochen werden.
+
+| Name | Position | Beschreibung |
+|---|---|---|
+| **Sans** | Links im horizontalen Korridor | "Gefangener Beobachter" – warnt vor den Archons |
+| **Papyrus** | Rechts im horizontalen Korridor | "Lehrling der Ordnung" – hält sich für einen Engel in Ausbildung |
+
+---
+
 ## Loot-Truhen
 
 In der Spielwelt befinden sich **3 Truhen** (goldene `?`-Kisten). Durch Drücken von `E` in der Nähe einer Truhe werden alle enthaltenen Items ins Inventar gelegt. Eine geöffnete Truhe wird grau und kann nicht erneut geöffnet werden.

@@ -1,0 +1,142 @@
+[
+  {
+    "name": "Finsternisgeist",
+    "maxHp": 20,
+    "pattern": "RANDOM_TARGET",
+    "fightDuration": 7.0,
+    "bulletInterval": 1.4,
+    "spawnX": 416, "spawnY": 1376,
+    "color": "#6B1FA3", "stroke": "#CE93D8",
+    "reward": "Engelssegen",
+    "preDialog": [
+      "So... ein weiterer Sterblicher betritt mein Reich.",
+      "Diese Finsternis ist alles, was ich kenne.",
+      "Du wirst bereuen, hierher gekommen zu sein!"
+    ],
+    "actDialog": [
+      "Der Finsternisgeist schießt Kugeln aus zufälligen Richtungen.",
+      "Weiche aus und überlebe die Zeit, um ihm Schaden zuzufügen!"
+    ],
+    "postDialog": [
+      "Unmöglich... du hast mich besiegt.",
+      "Meine Kraft... gehört nun dir.",
+      "Die Finsternis... weicht zurück..."
+    ]
+  },
+  {
+    "name": "Schattenwächter",
+    "maxHp": 40,
+    "pattern": "RAIN",
+    "fightDuration": 9.0,
+    "bulletInterval": 0.75,
+    "spawnX": 416, "spawnY": 576,
+    "color": "#1A237E", "stroke": "#82B1FF",
+    "reward": "HeiligesSchwert",
+    "preDialog": [
+      "Ich habe von deinem Sieg gegen den Finsternisgeist gehört.",
+      "Beeindruckend... aber ich bin eine völlig andere Herausforderung.",
+      "Die Schatten gehorchen mir!",
+      "Regen aus Dunkelheit... ANGRIFF!"
+    ],
+    "actDialog": [
+      "Der Schattenwächter lässt Kugeln von oben regnen.",
+      "Bewege das Herz seitwärts, um den fallenden Kugeln auszuweichen!"
+    ],
+    "postDialog": [
+      "Du... bist stärker als ich dachte.",
+      "Diese Klinge war mein wertvollster Besitz.",
+      "Nimm sie... sie wird dir auf deinem weiteren Weg dienen."
+    ]
+  },
+  {
+    "name": "Der Richter",
+    "maxHp": 30,
+    "pattern": "CROSSFIRE",
+    "fightDuration": 0.55,
+    "bulletInterval": 0.55,
+    "spawnX": 416, "spawnY": 192,
+    "color": "#37474F", "stroke": "#FFD700",
+    "reward": "HeiliigeSchriftrolle",
+    "preDialog": [
+      "Hier endet deine Reise, Sterblicher.",
+      "Ich bin der Richter dieser Welt.",
+      "Zwei meiner Brüder hast du bezwungen... beeindruckend.",
+      "Aber kein Sterblicher hat je mein Urteil überstanden.",
+      "GERICHTSTAG!"
+    ],
+    "actDialog": [
+      "Der Richter greift von allen vier Seiten gleichzeitig an!",
+      "Finde die Lücken zwischen den Kugeln und weiche aus!"
+    ],
+    "postDialog": [
+      "Du... hast mein Urteil widerlegt.",
+      "In all meinen Jahren... nie hat jemand das geschafft.",
+      "Die Welt ist frei von meiner Last.",
+      "Geh, Held. Du hast deine Würde bewiesen.",
+      "LEVEL 1 ABGESCHLOSSEN!"
+    ],
+    "phases": [
+      { "name": "Urteil",             "duration": 5.0, "interval": 0.6  },
+      { "name": "Kreuzgericht",       "duration": 4.0, "interval": 0.4  },
+      { "name": "Heiliger Regen",     "duration": 5.0, "interval": 0.15 },
+      { "name": "Mauern des Himmels", "duration": 6.0, "interval": 0.5  },
+      { "name": "Göttliches Gericht", "duration": 6.0, "interval": 0.4  }
+    ]
+  },
+  {
+    "name": "Der Springer",
+    "maxHp": 25,
+    "pattern": "GRAVITY_JUMP",
+    "fightDuration": 10.0,
+    "bulletInterval": 1.4,
+    "spawnX": 256, "spawnY": 800,
+    "color": "#BF360C", "stroke": "#FF7043",
+    "reward": "SpringerAmulett",
+    "preDialog": [
+      "Ein Sterblicher... wagt es, mein Reich zu betreten?",
+      "Ich kontrolliere die Schwerkraft selbst!",
+      "Lass uns sehen, ob du mithalten kannst!"
+    ],
+    "actDialog": [
+      "Der Springer erzeugt Hindernisse aus Schwerkraft.",
+      "Drücke SPACE zum Springen und weiche den Blöcken aus!"
+    ],
+    "postDialog": [
+      "Meine Schwerkraft... gebrochen...",
+      "Du bist flinker als ich dachte.",
+      "Nimm dieses Amulett als Zeichen meiner Niederlage."
+    ]
+  },
+  {
+    "name": "Das Auge",
+    "maxHp": 25,
+    "pattern": "LASER",
+    "fightDuration": 0.0,
+    "bulletInterval": 0.0,
+    "spawnX": 544, "spawnY": 800,
+    "color": "#1A0033", "stroke": "#00E5FF",
+    "reward": "KosmischesAuge",
+    "preDialog": [
+      "Ich sehe alles... jede deiner Bewegungen.",
+      "Meine Laserstrahlen haben noch niemanden verfehlt.",
+      "Du bist mutig... oder wahnsinnig.",
+      "STRAHL DES GERICHTS!"
+    ],
+    "actDialog": [
+      "Das Auge feuert Laserstrahlen, die den Raum durchschneiden.",
+      "Warte auf die Warnfarbe und weiche den roten Strahlen aus!"
+    ],
+    "postDialog": [
+      "Unmöglich... mein Blick ist gebrochen.",
+      "Du bewegst dich wie ein Schatten.",
+      "Mein letztes Geheimnis... gehört dir.",
+      "Das Licht... erlischt..."
+    ],
+    "phases": [
+      { "name": "Sehstrahl",   "duration": 5.0, "interval": 0.0 },
+      { "name": "Brennstrahl", "duration": 6.0, "interval": 1.2 },
+      { "name": "Gitterfalle", "duration": 6.0, "interval": 1.2 },
+      { "name": "Blitzraster", "duration": 7.0, "interval": 0.8 }
+    ]
+  }
+]

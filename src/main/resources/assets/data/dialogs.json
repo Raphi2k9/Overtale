@@ -1,0 +1,24 @@
+{
+  "intro": [
+    "Willkommen, Fremder...",
+    "Diese Welt liegt im Dunkeln. Drei mächtige Wächter halten sie gefangen.",
+    "Suche den Ratgeber (gelbe Figur) in deiner Nähe für mehr Informationen.",
+    "Drücke E zum Interagieren."
+  ],
+  "victory": [
+    "Du hast alle Wächter besiegt!",
+    "Das Licht kehrt in diese Welt zurück.",
+    "Du bist ein wahrer Held dieser Welt.",
+    "... Ende von Level 1 ..."
+  ],
+  "sans": [
+    "Heya. Ich bin Sans. Sans der Skelett.",
+    "Du solltest vorsichtig sein hier oben... die Archons spielen nicht.",
+    "Halo-Donut gefällig? Kostet nur ein bisschen SOUL."
+  ],
+  "papyrus": [
+    "NYYYYEH HEH HEH! ICH BIN DER GROSSE PAPYRUS!",
+    "Ich trainiere gerade zum Engel! Ist das nicht wunderbar?!",
+    "Sei vorsichtig — der Richter wartet oben auf dich!"
+  ]
+}

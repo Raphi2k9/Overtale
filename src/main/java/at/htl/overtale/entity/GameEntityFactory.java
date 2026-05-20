@@ -22,7 +22,7 @@ public class GameEntityFactory implements EntityFactory {
     public Entity newPlayer(SpawnData data) {
         return FXGL.entityBuilder(data)
                 .type(EntityType.PLAYER)
-                .viewWithBBox(new Rectangle(40, 40, Color.BLUE)) // Größe & Farbe
+                .viewWithBBox(FXGL.texture("frisk.png", 64, 64))
                 .with(new CollidableComponent(true))
                 .zIndex(1)
                 .build();

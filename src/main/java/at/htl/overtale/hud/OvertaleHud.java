@@ -3,6 +3,7 @@ package at.htl.overtale.hud;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -27,7 +28,7 @@ public class OvertaleHud {
     private Text _dialogText;
     private Rectangle _hpBar;
     private Rectangle _enemyHpBar;
-    private Rectangle _heart;
+    private ImageView _heart;
 
     // Panes
     private Pane _hudPane;
@@ -57,7 +58,8 @@ public class OvertaleHud {
     public static final double BATTLE_INNER_Y = 150;
     public static final double BATTLE_INNER_W = 400;
     public static final double BATTLE_INNER_H = 300;
-    public static final int    HEART_SIZE      = 10;
+    public static final int    HEART_SIZE      = 30;
+    public static final int    HEART_HITBOX    = 10;
 
     // Dodge-Kugeln (UI-Ebene, damit sie über dem schwarzen Hintergrund sichtbar sind)
     private final List<Rectangle> _dodgeBullets    = new ArrayList<>();
@@ -225,7 +227,10 @@ public class OvertaleHud {
     }
 
     private void buildHeart() {
-        _heart = new Rectangle(HEART_SIZE, HEART_SIZE, Color.RED);
+        _heart = new ImageView(FXGL.image("heart.png"));
+        _heart.setFitWidth(HEART_SIZE);
+        _heart.setFitHeight(HEART_SIZE);
+        _heart.setSmooth(false);
         _heart.setVisible(false);
         _hudPane.getChildren().add(_heart); // letztes Kind → immer oben
     }
@@ -409,10 +414,11 @@ public class OvertaleHud {
 
     /** Prüft Kollision Herz ↔ Kugeln, entfernt getroffene Kugel. @return true wenn getroffen. */
     public boolean checkAndRemoveCollidingBullet() {
-        double hx = _heart.getTranslateX(), hy = _heart.getTranslateY();
+        double offset = (HEART_SIZE - HEART_HITBOX) / 2.0;
+        double hx = _heart.getTranslateX() + offset, hy = _heart.getTranslateY() + offset;
         for (Rectangle b : _dodgeBullets) {
             double bx = b.getTranslateX(), by = b.getTranslateY();
-            if (bx < hx + HEART_SIZE && bx + 8 > hx && by < hy + HEART_SIZE && by + 8 > hy) {
+            if (bx < hx + HEART_HITBOX && bx + 8 > hx && by < hy + HEART_HITBOX && by + 8 > hy) {
                 removeDodgeBullet(b);
                 return true;
             }
@@ -452,10 +458,11 @@ public class OvertaleHud {
 
     /** @return true wenn ein Richter-Blitz das Herz getroffen hat (5 Schaden). */
     public boolean checkAndRemoveCollidingBolt() {
-        double hx = _heart.getTranslateX(), hy = _heart.getTranslateY();
+        double offset = (HEART_SIZE - HEART_HITBOX) / 2.0;
+        double hx = _heart.getTranslateX() + offset, hy = _heart.getTranslateY() + offset;
         for (Rectangle b : new ArrayList<>(_richterBolts)) {
             double bx = b.getTranslateX(), by = b.getTranslateY();
-            if (bx < hx + HEART_SIZE && bx + 20 > hx && by < hy + HEART_SIZE && by + 20 > hy) {
+            if (bx < hx + HEART_HITBOX && bx + 20 > hx && by < hy + HEART_HITBOX && by + 20 > hy) {
                 removeRichterBolt(b);
                 return true;
             }

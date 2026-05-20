@@ -11,6 +11,9 @@
 #### 3. Goldener Nektar
 + Heal = 20
 
+#### 4. Springer Amulett
++ Heal = 8
+
 ### 2. Attack Items
 
 #### 1. Götlicher Speer
@@ -21,6 +24,9 @@
 
 #### 3. Engelssegen
 + Damage = 10
+
+#### 4. Kosmisches Auge
++ Damage = 6
 
 ### 3. Kombi Items
 

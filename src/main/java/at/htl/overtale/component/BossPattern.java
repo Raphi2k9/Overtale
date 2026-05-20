@@ -6,5 +6,9 @@ public enum BossPattern {
     /** Multiple bullets fall straight down from the top. */
     RAIN,
     /** 4 bullets from all sides simultaneously, all aimed at heart. */
-    CROSSFIRE
+    CROSSFIRE,
+    /** Gravity jump-and-run: heart falls, player jumps over scrolling obstacles. */
+    GRAVITY_JUMP,
+    /** Laser dodge: warning flash then active laser beams deal damage. */
+    LASER
 }

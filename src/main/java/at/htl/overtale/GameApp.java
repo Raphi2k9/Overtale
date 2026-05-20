@@ -113,6 +113,48 @@ public class GameApp extends GameApplication {
             BossPattern.CROSSFIRE, 12.0, 0.55,
             416, 192,
             new HeiliigeSchriftrolle()
+        ),
+        new BossData(
+            "Der Springer", 25,
+            List.of(
+                "Ein Sterblicher... wagt es, mein Reich zu betreten?",
+                "Ich kontrolliere die Schwerkraft selbst!",
+                "Lass uns sehen, ob du mithalten kannst!"
+            ),
+            List.of(
+                "Der Springer erzeugt Hindernisse aus Schwerkraft.",
+                "Drücke SPACE zum Springen und weiche den Blöcken aus!"
+            ),
+            List.of(
+                "Meine Schwerkraft... gebrochen...",
+                "Du bist flinker als ich dachte.",
+                "Nimm dieses Amulett als Zeichen meiner Niederlage."
+            ),
+            BossPattern.GRAVITY_JUMP, 10.0, 1.4,
+            256, 800,
+            new SpringerAmulett()
+        ),
+        new BossData(
+            "Das Auge", 25,
+            List.of(
+                "Ich sehe alles... jede deiner Bewegungen.",
+                "Meine Laserstrahlen haben noch niemanden verfehlt.",
+                "Du bist mutig... oder wahnsinnig.",
+                "STRAHL DES GERICHTS!"
+            ),
+            List.of(
+                "Das Auge feuert Laserstrahlen, die den Raum durchschneiden.",
+                "Warte auf die Warnfarbe und weiche den roten Strahlen aus!"
+            ),
+            List.of(
+                "Unmöglich... mein Blick ist gebrochen.",
+                "Du bewegst dich wie ein Schatten.",
+                "Mein letztes Geheimnis... gehört dir.",
+                "Das Licht... erlischt..."
+            ),
+            BossPattern.LASER, 0.0, 0.0,
+            544, 800,
+            new KosmischesAuge()
         )
     };
 
@@ -127,6 +169,17 @@ public class GameApp extends GameApplication {
     };
     private static final double[] RICHTER_DURATIONS = {5.0, 4.0, 5.0, 6.0, 6.0};
     private static final double[] RICHTER_INTERVALS = {0.6, 0.4, 0.15, 0.5, 0.4};
+
+    // ── Das Auge phase data ───────────────────────────────────────────────────
+
+    private static final String[] AUGE_PHASE_NAMES = {
+        "Sehstrahl",      // sweeping horizontal laser
+        "Brennstrahl",    // 3 vertical flash lasers
+        "Gitterfalle",    // 2-3 horizontal flash lasers
+        "Blitzraster"     // cross flash lasers
+    };
+    private static final double[] AUGE_DURATIONS  = {5.0, 6.0, 6.0, 7.0};
+    private static final double[] AUGE_INTERVALS  = {0.0, 1.2, 1.2, 0.8};
 
     // ── State ─────────────────────────────────────────────────────────────────
 
@@ -152,6 +205,7 @@ public class GameApp extends GameApplication {
     private boolean     _isGameOver      = false;
     private int         _dodgeRound      = 0;
     private double      _richterCorridorOffset = 110;
+    private double      _damageCooldown  = 0.0;
     private TimerAction _dodgeTimerAction;
     private TimerAction _richterBoltTimerAction;
     private List<Node>  _gameOverNodes   = List.of();
@@ -174,14 +228,17 @@ public class GameApp extends GameApplication {
     protected void initInput() {
         onKey(KeyCode.W, () -> {
             if (_inDodgePhase) {
-                _hud.moveHeart(0, -3);
+                if (!_hud.isGravityEnabled()) _hud.moveHeart(0, -3);
             } else if (!_dialogManager.isActive() && !_inventoryHud.isVisible() && !_hud.isHUDVisible()) {
                 _player.translateY(-3);
             }
         });
+        onKeyDown(KeyCode.SPACE, () -> {
+            if (_inDodgePhase && _hud.isGravityEnabled()) _hud.jumpHeart();
+        });
         onKey(KeyCode.S, () -> {
             if (_inDodgePhase) {
-                _hud.moveHeart(0, 3);
+                if (!_hud.isGravityEnabled()) _hud.moveHeart(0, 3);
             } else if (!_dialogManager.isActive() && !_inventoryHud.isVisible() && !_hud.isHUDVisible()) {
                 _player.translateY(3);
             }
@@ -292,6 +349,7 @@ public class GameApp extends GameApplication {
         _bonusDamage           = 0;
         _inDodgePhase          = false;
         _dodgeRound            = 0;
+        _damageCooldown        = 0.0;
         _dodgeTimerAction      = null;
         _richterBoltTimerAction = null;
 
@@ -323,6 +381,18 @@ public class GameApp extends GameApplication {
                 .put("stroke", Color.web("#FFD700"))
                 .put("bossIndex", 2)));
 
+        // Der Springer – orange-red, horizontal corridor left side
+        _bossEntities.add(spawn("boss", new SpawnData(256, 800)
+                .put("color", Color.web("#BF360C"))
+                .put("stroke", Color.web("#FF7043"))
+                .put("bossIndex", 3)));
+
+        // Das Auge – deep purple with cyan border, horizontal corridor right side
+        _bossEntities.add(spawn("boss", new SpawnData(544, 800)
+                .put("color", Color.web("#1A0033"))
+                .put("stroke", Color.web("#00E5FF"))
+                .put("bossIndex", 4)));
+
         // Chest 1 – entry corridor early reward (col 13, row 40)
         _chests.add(spawn("lootChest", new SpawnData(416, 1280)
                 .put("items", new Item[]{new Sonnenessenz()})));
@@ -349,10 +419,7 @@ public class GameApp extends GameApplication {
                     protected void onCollisionBegin(Entity p, Entity bullet) {
                         if (_inDodgePhase) return;
                         bullet.removeFromWorld();
-                        _currentHP -= 2;
-                        if (_currentHP < 0) _currentHP = 0;
-                        _hud.updateHP(_currentHP, _maxHP);
-                        checkPlayerDead();
+                        takeDamage(2);
                     }
                 }
         );
@@ -381,20 +448,33 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
+        if (_damageCooldown > 0) _damageCooldown -= tpf;
         if (_inDodgePhase) {
             _hud.updateDodgeBullets(tpf);
-            if (_hud.checkAndRemoveCollidingBullet()) {
-                _currentHP -= 2;
-                if (_currentHP < 0) _currentHP = 0;
-                _hud.updateHP(_currentHP, _maxHP);
-                checkPlayerDead();
-            } else if (_hud.checkAndRemoveCollidingBolt()) {
-                _currentHP -= 5;
-                if (_currentHP < 0) _currentHP = 0;
-                _hud.updateHP(_currentHP, _maxHP);
-                checkPlayerDead();
+            _hud.updateGravity(tpf);
+            _hud.updateObstacles(tpf);
+            _hud.updateLasers(tpf);
+            if (_damageCooldown <= 0) {
+                if (_hud.checkAndRemoveCollidingBullet()) {
+                    takeDamage(2);
+                } else if (_hud.checkAndRemoveCollidingBolt()) {
+                    takeDamage(5);
+                } else if (_hud.checkLaserCollision()) {
+                    takeDamage(2);
+                    _damageCooldown = 0.7;
+                } else if (_hud.checkObstacleCollision()) {
+                    takeDamage(2);
+                    _damageCooldown = 0.5;
+                }
             }
         }
+    }
+
+    private void takeDamage(int dmg) {
+        _currentHP -= dmg;
+        if (_currentHP < 0) _currentHP = 0;
+        _hud.updateHP(_currentHP, _maxHP);
+        checkPlayerDead();
     }
 
     // ── Boss fight ────────────────────────────────────────────────────────────
@@ -420,6 +500,13 @@ public class GameApp extends GameApplication {
             String announce = "Runde " + (_dodgeRound + 1) + " — " + RICHTER_PHASE_NAMES[phase] + "...";
             _hud.showAnnouncement(announce);
             getGameTimer().runOnceAfter(this::beginRichterDodge, Duration.seconds(1.5));
+        } else if (_currentBossIndex == 3) {
+            beginGravityDodge();
+        } else if (_currentBossIndex == 4) {
+            int phase = augePhaseIndex();
+            String announce = "Runde " + (_dodgeRound + 1) + " — " + AUGE_PHASE_NAMES[phase] + "...";
+            _hud.showAnnouncement(announce);
+            getGameTimer().runOnceAfter(this::beginAugeDodge, Duration.seconds(1.5));
         } else {
             beginStandardDodge();
         }
@@ -480,7 +567,7 @@ public class GameApp extends GameApplication {
         checkPlayerDead();
         if (_isGameOver) return;
 
-        if (_currentBossIndex == 2) _dodgeRound++;
+        if (_currentBossIndex == 2 || _currentBossIndex == 4) _dodgeRound++;
 
         int baseDamage = 5;
         _enemyHP = Math.max(0, _enemyHP - baseDamage - _bonusDamage);
@@ -513,7 +600,7 @@ public class GameApp extends GameApplication {
 
         _hud.hideAll();
         _dialogManager.startDialog(boss.postDialog(), () -> {
-            if (_bossesDefeated == BOSSES.length) {
+            if (_bossesDefeated >= BOSSES.length) {
                 showVictory();
             }
         });
@@ -690,6 +777,137 @@ public class GameApp extends GameApplication {
         if (!_inDodgePhase) return;
         double centerX = OvertaleHud.BATTLE_INNER_X + OvertaleHud.BATTLE_INNER_W / 2.0 - 10;
         _hud.addRichterBolt(centerX, OvertaleHud.BATTLE_INNER_Y - 20, 0, 90);
+    }
+
+    // ── Der Springer – gravity jump-and-run ──────────────────────────────────
+
+    private void beginGravityDodge() {
+        if (_isGameOver) return;
+        _inDodgePhase = true;
+        _hud.showBattleBoxOnly();
+        _hud.enableGravity();
+
+        BossData boss = BOSSES[_currentBossIndex];
+        _dodgeTimerAction = getGameTimer().runAtInterval(
+                this::spawnGravityObstacle, Duration.seconds(boss.bulletInterval()));
+        getGameTimer().runOnceAfter(this::endDodgePhase, Duration.seconds(boss.fightDuration()));
+    }
+
+    private void spawnGravityObstacle() {
+        if (!_inDodgePhase) return;
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        double startX = ix + iw + 5;
+        double speed  = -190.0;
+        // Apex height: JUMP_VELOCITY²/(2*GRAVITY) = 420²/920 ≈ 192px above floor
+        // Floor at iy+288, so apex at iy+96.
+        // Gap top anchored 40px above apex with ±20px randomness → iy+36 to iy+76.
+        int type = (int)(Math.random() * 3);
+
+        switch (type) {
+            case 0 -> {
+                // Wall with gap – gap anchored at jump apex so it's always clearable
+                double gapY = iy + 36 + Math.random() * 40; // iy+36..iy+76
+                double gapH = 80.0;
+                _hud.addObstacle(startX, iy, 22, gapY - iy, speed);                         // top block
+                _hud.addObstacle(startX, gapY + gapH, 22, iy + ih - (gapY + gapH), speed);  // bottom block
+            }
+            case 1 -> {
+                // Low ground block – max 110px, apex (192px clearance) easily clears it
+                double h = 50 + Math.random() * 60;
+                _hud.addObstacle(startX, iy + ih - h, 22, h, speed);
+            }
+            case 2 -> {
+                // Two low blocks close together – requires a well-timed sustained jump
+                double h1 = 60 + Math.random() * 40;
+                double h2 = 60 + Math.random() * 40;
+                _hud.addObstacle(startX,      iy + ih - h1, 20, h1, speed);
+                _hud.addObstacle(startX + 36, iy + ih - h2, 20, h2, speed);
+            }
+        }
+    }
+
+    // ── Das Auge – laser patterns ─────────────────────────────────────────────
+
+    private int augePhaseIndex() { return _dodgeRound % 4; }
+
+    private void beginAugeDodge() {
+        if (_isGameOver) return;
+        _inDodgePhase = true;
+        _hud.showBattleBoxOnly();
+        _hud.showHeart();
+
+        int phase = augePhaseIndex();
+        if (phase == 0) {
+            // Sehstrahl: one sweeping horizontal laser, no repeating timer
+            spawnSweepingLaser();
+        } else {
+            _dodgeTimerAction = getGameTimer().runAtInterval(
+                    this::spawnAugePhase, Duration.seconds(AUGE_INTERVALS[phase]));
+        }
+        getGameTimer().runOnceAfter(this::endDodgePhase, Duration.seconds(AUGE_DURATIONS[phase]));
+    }
+
+    private void spawnAugePhase() {
+        if (!_inDodgePhase) return;
+        switch (augePhaseIndex()) {
+            case 1 -> spawnVerticalFlashLasers();
+            case 2 -> spawnHorizontalFlashLasers();
+            case 3 -> spawnCrossFlashLaser();
+        }
+    }
+
+    /** Phase 0 – Sehstrahl: single horizontal beam sweeping from top to bottom. */
+    private void spawnSweepingLaser() {
+        double ix = OvertaleHud.BATTLE_INNER_X;
+        double iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W;
+        _hud.addLaser(ix, iy + 5, iw, 14, 0, 40, true);
+    }
+
+    /** Phase 1 – Brennstrahl: 3 vertical warning lasers at random X, flash before activating. */
+    private void spawnVerticalFlashLasers() {
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        for (int i = 0; i < 3; i++) {
+            double lx = ix + 14 + Math.random() * (iw - 28);
+            Rectangle laser = _hud.addLaser(lx, iy, 14, ih, 0, 0, false);
+            getGameTimer().runOnceAfter(() -> _hud.activateLaser(laser),   Duration.seconds(0.7));
+            getGameTimer().runOnceAfter(() -> _hud.removeLaserNode(laser), Duration.seconds(1.4));
+        }
+    }
+
+    /** Phase 2 – Gitterfalle: 2-3 horizontal warning lasers at random Y positions. */
+    private void spawnHorizontalFlashLasers() {
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        int count = 2 + (int)(Math.random() * 2);
+        for (int i = 0; i < count; i++) {
+            double ly = iy + 14 + Math.random() * (ih - 28);
+            Rectangle laser = _hud.addLaser(ix, ly, iw, 14, 0, 0, false);
+            getGameTimer().runOnceAfter(() -> _hud.activateLaser(laser),   Duration.seconds(0.7));
+            getGameTimer().runOnceAfter(() -> _hud.removeLaserNode(laser), Duration.seconds(1.4));
+        }
+    }
+
+    /** Phase 3 – Blitzraster: a horizontal + vertical cross at a random point. */
+    private void spawnCrossFlashLaser() {
+        double ix = OvertaleHud.BATTLE_INNER_X, iy = OvertaleHud.BATTLE_INNER_Y;
+        double iw = OvertaleHud.BATTLE_INNER_W, ih = OvertaleHud.BATTLE_INNER_H;
+        double cx = ix + 30 + Math.random() * (iw - 60);
+        double cy = iy + 30 + Math.random() * (ih - 60);
+
+        Rectangle hLaser = _hud.addLaser(ix, cy - 7,  iw, 14, 0, 0, false);
+        Rectangle vLaser = _hud.addLaser(cx - 7, iy,  14, ih, 0, 0, false);
+
+        getGameTimer().runOnceAfter(() -> {
+            _hud.activateLaser(hLaser);
+            _hud.activateLaser(vLaser);
+        }, Duration.seconds(0.6));
+        getGameTimer().runOnceAfter(() -> {
+            _hud.removeLaserNode(hLaser);
+            _hud.removeLaserNode(vLaser);
+        }, Duration.seconds(1.2));
     }
 
     // ── Battle menu ───────────────────────────────────────────────────────────

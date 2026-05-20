@@ -66,6 +66,21 @@ public class OvertaleHud {
     private final List<Rectangle> _richterBolts    = new ArrayList<>();
     private final List<double[]>  _richterBoltVels = new ArrayList<>();
 
+    // Schwerkraft / Jump-and-Run
+    private boolean _gravityEnabled = false;
+    private double  _heartVY        = 0.0;
+    private boolean _heartOnGround  = false;
+    private static final double GRAVITY       = 460.0;
+    private static final double JUMP_VELOCITY = -420.0;
+
+    private final List<Rectangle> _obstacles    = new ArrayList<>();
+    private final List<double[]>  _obstacleVels = new ArrayList<>();
+
+    // Laser
+    private final List<Rectangle> _allLasers    = new ArrayList<>();
+    private final List<Boolean>   _laserActive  = new ArrayList<>();
+    private final List<double[]>  _laserVelocity = new ArrayList<>();
+
     public void build() {
         _hudPane        = new Pane();
         _battleMenuPane = new Pane();
@@ -446,6 +461,180 @@ public class OvertaleHud {
         return false;
     }
 
+    // --- Gravity / Jump-and-Run API ---
+
+    public void enableGravity() {
+        _gravityEnabled = true;
+        _heartVY = 0.0;
+        _heartOnGround = false;
+        _heart.setTranslateX(BATTLE_INNER_X + 20);
+        _heart.setTranslateY(BATTLE_INNER_Y + BATTLE_INNER_H - HEART_SIZE - 1);
+        _heart.setVisible(true);
+    }
+
+    public void disableGravity() {
+        _gravityEnabled = false;
+        _heartVY = 0.0;
+        _heartOnGround = false;
+    }
+
+    public boolean isGravityEnabled() { return _gravityEnabled; }
+
+    public void jumpHeart() {
+        if (_gravityEnabled && _heartOnGround) {
+            _heartVY = JUMP_VELOCITY;
+            _heartOnGround = false;
+        }
+    }
+
+    public void updateGravity(double tpf) {
+        if (!_gravityEnabled) return;
+        _heartVY += GRAVITY * tpf;
+        double ny      = _heart.getTranslateY() + _heartVY * tpf;
+        double floor   = BATTLE_INNER_Y + BATTLE_INNER_H - HEART_SIZE - 1;
+        double ceiling = BATTLE_INNER_Y + 1;
+        if (ny >= floor) {
+            ny = floor;
+            _heartVY = 0.0;
+            _heartOnGround = true;
+        } else {
+            _heartOnGround = false;
+        }
+        if (ny <= ceiling && _heartVY < 0) {
+            ny = ceiling;
+            _heartVY = 0.0;
+        }
+        _heart.setTranslateY(ny);
+    }
+
+    public void addObstacle(double x, double y, double w, double h, double vx) {
+        Rectangle obs = new Rectangle(w, h, Color.web("#FF4500"));
+        obs.setStroke(Color.web("#FF8C00"));
+        obs.setStrokeWidth(2);
+        obs.setTranslateX(x);
+        obs.setTranslateY(y);
+        int heartIdx = _hudPane.getChildren().indexOf(_heart);
+        _hudPane.getChildren().add(heartIdx, obs);
+        _obstacles.add(obs);
+        _obstacleVels.add(new double[]{vx, 0});
+    }
+
+    public void updateObstacles(double tpf) {
+        List<Rectangle> toRemove = new ArrayList<>();
+        for (int i = 0; i < _obstacles.size(); i++) {
+            Rectangle obs = _obstacles.get(i);
+            obs.setTranslateX(obs.getTranslateX() + _obstacleVels.get(i)[0] * tpf);
+            if (obs.getTranslateX() + obs.getWidth() < BATTLE_INNER_X - 20) toRemove.add(obs);
+        }
+        toRemove.forEach(this::removeObstacle);
+    }
+
+    public boolean checkObstacleCollision() {
+        double hx = _heart.getTranslateX(), hy = _heart.getTranslateY();
+        for (Rectangle obs : _obstacles) {
+            double ox = obs.getTranslateX(), oy = obs.getTranslateY();
+            if (hx < ox + obs.getWidth()  && hx + HEART_SIZE > ox &&
+                hy < oy + obs.getHeight() && hy + HEART_SIZE > oy) return true;
+        }
+        return false;
+    }
+
+    private void removeObstacle(Rectangle obs) {
+        int idx = _obstacles.indexOf(obs);
+        if (idx >= 0) {
+            _hudPane.getChildren().remove(obs);
+            _obstacles.remove(idx);
+            _obstacleVels.remove(idx);
+        }
+    }
+
+    public void clearObstacles() {
+        _hudPane.getChildren().removeAll(new ArrayList<>(_obstacles));
+        _obstacles.clear();
+        _obstacleVels.clear();
+    }
+
+    // --- Laser API ---
+
+    /** Adds a laser rectangle. Warning lasers (active=false) are shown yellow; active ones red. */
+    public Rectangle addLaser(double x, double y, double w, double h,
+                               double vx, double vy, boolean active) {
+        Rectangle laser = new Rectangle(w, h);
+        if (active) {
+            laser.setFill(Color.web("#FF1111", 0.75));
+            laser.setStroke(Color.web("#FF5555"));
+        } else {
+            laser.setFill(Color.web("#FFDD00", 0.35));
+            laser.setStroke(Color.web("#FFFF66"));
+        }
+        laser.setStrokeWidth(2);
+        laser.setTranslateX(x);
+        laser.setTranslateY(y);
+        int heartIdx = _hudPane.getChildren().indexOf(_heart);
+        _hudPane.getChildren().add(heartIdx, laser);
+        _allLasers.add(laser);
+        _laserActive.add(active);
+        _laserVelocity.add(new double[]{vx, vy});
+        return laser;
+    }
+
+    /** Changes a warning laser to active (red, deals damage). */
+    public void activateLaser(Rectangle laser) {
+        int idx = _allLasers.indexOf(laser);
+        if (idx < 0) return;
+        _laserActive.set(idx, true);
+        laser.setFill(Color.web("#FF1111", 0.75));
+        laser.setStroke(Color.web("#FF5555"));
+    }
+
+    /** Removes a specific laser node (call from GameApp timers). */
+    public void removeLaserNode(Rectangle laser) {
+        int idx = _allLasers.indexOf(laser);
+        if (idx >= 0) {
+            _hudPane.getChildren().remove(laser);
+            _allLasers.remove(idx);
+            _laserActive.remove(idx);
+            _laserVelocity.remove(idx);
+        }
+    }
+
+    public void updateLasers(double tpf) {
+        List<Rectangle> toRemove = new ArrayList<>();
+        for (int i = 0; i < _allLasers.size(); i++) {
+            double[] vel = _laserVelocity.get(i);
+            if (vel[0] == 0 && vel[1] == 0) continue;
+            Rectangle laser = _allLasers.get(i);
+            laser.setTranslateX(laser.getTranslateX() + vel[0] * tpf);
+            laser.setTranslateY(laser.getTranslateY() + vel[1] * tpf);
+            double lx = laser.getTranslateX(), ly = laser.getTranslateY();
+            if (lx + laser.getWidth()  < BATTLE_INNER_X - 20 || lx > BATTLE_INNER_X + BATTLE_INNER_W + 20 ||
+                ly + laser.getHeight() < BATTLE_INNER_Y - 20 || ly > BATTLE_INNER_Y + BATTLE_INNER_H + 20) {
+                toRemove.add(laser);
+            }
+        }
+        toRemove.forEach(this::removeLaserNode);
+    }
+
+    /** Returns true if any active laser overlaps the heart. Does NOT remove the laser. */
+    public boolean checkLaserCollision() {
+        double hx = _heart.getTranslateX(), hy = _heart.getTranslateY();
+        for (int i = 0; i < _allLasers.size(); i++) {
+            if (!_laserActive.get(i)) continue;
+            Rectangle laser = _allLasers.get(i);
+            double lx = laser.getTranslateX(), ly = laser.getTranslateY();
+            if (hx < lx + laser.getWidth()  && hx + HEART_SIZE > lx &&
+                hy < ly + laser.getHeight() && hy + HEART_SIZE > ly) return true;
+        }
+        return false;
+    }
+
+    public void clearLasers() {
+        _hudPane.getChildren().removeAll(new ArrayList<>(_allLasers));
+        _allLasers.clear();
+        _laserActive.clear();
+        _laserVelocity.clear();
+    }
+
     public void removeDodgeBullet(Rectangle bullet) {
         int idx = _dodgeBullets.indexOf(bullet);
         if (idx >= 0) {
@@ -456,12 +645,15 @@ public class OvertaleHud {
     }
 
     public void clearDodgeBullets() {
-        _hudPane.getChildren().removeAll(_dodgeBullets);
+        _hudPane.getChildren().removeAll(new ArrayList<>(_dodgeBullets));
         _dodgeBullets.clear();
         _dodgeBulletVels.clear();
-        _hudPane.getChildren().removeAll(_richterBolts);
+        _hudPane.getChildren().removeAll(new ArrayList<>(_richterBolts));
         _richterBolts.clear();
         _richterBoltVels.clear();
+        clearObstacles();
+        clearLasers();
+        disableGravity();
     }
 
     private Text makeText(String content, double size) {

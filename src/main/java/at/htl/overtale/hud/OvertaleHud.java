@@ -32,6 +32,7 @@ public class OvertaleHud {
     // Panes
     private Pane _hudPane;
     private Pane _battleMenuPane;  // Buttons + HP-Panel (nur im Menü sichtbar)
+    private Pane _projectilePane;  // Bullets/Bolts/Obstacles/Lasers, clipped to battle box
     private Pane _dialogPane;
 
     // Typewriter
@@ -93,6 +94,10 @@ public class OvertaleHud {
         buildDialogBox();   // → _dialogPane
 
         _hudPane.getChildren().add(1, _battleMenuPane); // hinter dem Kampfkasten-Rand
+
+        _projectilePane = new Pane();
+        _projectilePane.setClip(new Rectangle(BATTLE_INNER_X, BATTLE_INNER_Y, BATTLE_INNER_W, BATTLE_INNER_H));
+        _hudPane.getChildren().add(2, _projectilePane); // zwischen Menü und Herz → wird durch Clip beschnitten
 
         FXGL.addUINode(_hudPane);
         FXGL.addUINode(_dialogPane);
@@ -367,9 +372,7 @@ public class OvertaleHud {
         Rectangle bullet = new Rectangle(8, 8, Color.WHITE);
         bullet.setTranslateX(x);
         bullet.setTranslateY(y);
-        // Vor dem Herz einfügen, damit das Herz immer oben liegt
-        int heartIdx = _hudPane.getChildren().indexOf(_heart);
-        _hudPane.getChildren().add(heartIdx, bullet);
+        _projectilePane.getChildren().add(bullet);
         _dodgeBullets.add(bullet);
         _dodgeBulletVels.add(new double[]{vx, vy});
     }
@@ -433,8 +436,7 @@ public class OvertaleHud {
         bolt.setStrokeWidth(2);
         bolt.setTranslateX(x);
         bolt.setTranslateY(y);
-        int heartIdx = _hudPane.getChildren().indexOf(_heart);
-        _hudPane.getChildren().add(heartIdx, bolt);
+        _projectilePane.getChildren().add(bolt);
         _richterBolts.add(bolt);
         _richterBoltVels.add(new double[]{vx, vy});
     }
@@ -442,7 +444,7 @@ public class OvertaleHud {
     private void removeRichterBolt(Rectangle bolt) {
         int idx = _richterBolts.indexOf(bolt);
         if (idx >= 0) {
-            _hudPane.getChildren().remove(bolt);
+            _projectilePane.getChildren().remove(bolt);
             _richterBolts.remove(idx);
             _richterBoltVels.remove(idx);
         }
@@ -513,8 +515,7 @@ public class OvertaleHud {
         obs.setStrokeWidth(2);
         obs.setTranslateX(x);
         obs.setTranslateY(y);
-        int heartIdx = _hudPane.getChildren().indexOf(_heart);
-        _hudPane.getChildren().add(heartIdx, obs);
+        _projectilePane.getChildren().add(obs);
         _obstacles.add(obs);
         _obstacleVels.add(new double[]{vx, 0});
     }
@@ -542,14 +543,14 @@ public class OvertaleHud {
     private void removeObstacle(Rectangle obs) {
         int idx = _obstacles.indexOf(obs);
         if (idx >= 0) {
-            _hudPane.getChildren().remove(obs);
+            _projectilePane.getChildren().remove(obs);
             _obstacles.remove(idx);
             _obstacleVels.remove(idx);
         }
     }
 
     public void clearObstacles() {
-        _hudPane.getChildren().removeAll(new ArrayList<>(_obstacles));
+        _projectilePane.getChildren().removeAll(new ArrayList<>(_obstacles));
         _obstacles.clear();
         _obstacleVels.clear();
     }
@@ -570,8 +571,7 @@ public class OvertaleHud {
         laser.setStrokeWidth(2);
         laser.setTranslateX(x);
         laser.setTranslateY(y);
-        int heartIdx = _hudPane.getChildren().indexOf(_heart);
-        _hudPane.getChildren().add(heartIdx, laser);
+        _projectilePane.getChildren().add(laser);
         _allLasers.add(laser);
         _laserActive.add(active);
         _laserVelocity.add(new double[]{vx, vy});
@@ -591,7 +591,7 @@ public class OvertaleHud {
     public void removeLaserNode(Rectangle laser) {
         int idx = _allLasers.indexOf(laser);
         if (idx >= 0) {
-            _hudPane.getChildren().remove(laser);
+            _projectilePane.getChildren().remove(laser);
             _allLasers.remove(idx);
             _laserActive.remove(idx);
             _laserVelocity.remove(idx);
@@ -629,7 +629,7 @@ public class OvertaleHud {
     }
 
     public void clearLasers() {
-        _hudPane.getChildren().removeAll(new ArrayList<>(_allLasers));
+        _projectilePane.getChildren().removeAll(new ArrayList<>(_allLasers));
         _allLasers.clear();
         _laserActive.clear();
         _laserVelocity.clear();
@@ -638,17 +638,17 @@ public class OvertaleHud {
     public void removeDodgeBullet(Rectangle bullet) {
         int idx = _dodgeBullets.indexOf(bullet);
         if (idx >= 0) {
-            _hudPane.getChildren().remove(bullet);
+            _projectilePane.getChildren().remove(bullet);
             _dodgeBullets.remove(idx);
             _dodgeBulletVels.remove(idx);
         }
     }
 
     public void clearDodgeBullets() {
-        _hudPane.getChildren().removeAll(new ArrayList<>(_dodgeBullets));
+        _projectilePane.getChildren().removeAll(new ArrayList<>(_dodgeBullets));
         _dodgeBullets.clear();
         _dodgeBulletVels.clear();
-        _hudPane.getChildren().removeAll(new ArrayList<>(_richterBolts));
+        _projectilePane.getChildren().removeAll(new ArrayList<>(_richterBolts));
         _richterBolts.clear();
         _richterBoltVels.clear();
         clearObstacles();

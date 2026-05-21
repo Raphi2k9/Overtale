@@ -74,6 +74,8 @@ public class GameApp extends GameApplication {
     private TimerAction _dodgeTimerAction;
     private TimerAction _richterBoltTimerAction;
     private List<Node>  _gameOverNodes        = List.of();
+    private List<Node>  _winNodes             = List.of();
+    private boolean     _isVictory            = false;
 
     // ── Settings ──────────────────────────────────────────────────────────────
 
@@ -178,10 +180,12 @@ public class GameApp extends GameApplication {
         });
 
         onKey(KeyCode.R, () -> {
-            if (!_isGameOver) return;
+            if (!_isGameOver && !_isVictory) return;
             _gameOverNodes.forEach(n -> getGameScene().removeUINode(n));
+            _winNodes.forEach(n -> getGameScene().removeUINode(n));
             _isGameOver = false;
-            _currentHP  = _maxHP;
+            _isVictory  = false;
+            _currentHP  = 20;
             getGameController().startNewGame();
         });
     }
@@ -204,6 +208,8 @@ public class GameApp extends GameApplication {
         _dodgeRound            = 0;
         _damageCooldown        = 0.0;
         _spiralAngle           = 0.0;
+        _isVictory             = false;
+        _winNodes              = List.of();
         _dodgeTimerAction      = null;
         _richterBoltTimerAction = null;
 
@@ -390,7 +396,57 @@ public class GameApp extends GameApplication {
     }
 
     private void showVictory() {
-        _dialogManager.startDialog(_dialogs.victory);
+        _dialogManager.startDialog(_dialogs.victory, this::showWinScreen);
+    }
+
+    private void showWinScreen() {
+        _isVictory = true;
+        _hud.hideAll();
+
+        Rectangle overlay = new Rectangle(800, 600, Color.color(0, 0, 0, 0.92));
+
+        Rectangle goldBar = new Rectangle(0, 195, 800, 210);
+        goldBar.setFill(Color.color(0.12, 0.09, 0.0, 0.9));
+
+        Text stars = new Text("★  ★  ★  ★  ★");
+        stars.setFont(Font.font("Monospaced", 22));
+        stars.setFill(Color.web("#FFD700"));
+        stars.setX(400 - stars.getLayoutBounds().getWidth() / 2);
+        stars.setY(230);
+
+        Text title = new Text("LEVEL 1 ABGESCHLOSSEN!");
+        title.setFont(Font.font("Monospaced", 34));
+        title.setFill(Color.web("#FFD700"));
+        title.setX(400 - title.getLayoutBounds().getWidth() / 2);
+        title.setY(285);
+
+        Text subtitle = new Text("Alle Archons wurden bezwungen.");
+        subtitle.setFont(Font.font("Monospaced", 17));
+        subtitle.setFill(Color.web("#FFFDE7"));
+        subtitle.setX(400 - subtitle.getLayoutBounds().getWidth() / 2);
+        subtitle.setY(325);
+
+        Text hpLine = new Text("HP übrig:  " + _currentHP + " / " + _maxHP);
+        hpLine.setFont(Font.font("Monospaced", 15));
+        hpLine.setFill(Color.web("#A5D6A7"));
+        hpLine.setX(400 - hpLine.getLayoutBounds().getWidth() / 2);
+        hpLine.setY(362);
+
+        Text restart = new Text("R  —  Neustart");
+        restart.setFont(Font.font("Monospaced", 15));
+        restart.setFill(Color.web("#9E9E9E"));
+        restart.setX(400 - restart.getLayoutBounds().getWidth() / 2);
+        restart.setY(395);
+
+        getGameScene().addUINode(overlay);
+        getGameScene().addUINode(goldBar);
+        getGameScene().addUINode(stars);
+        getGameScene().addUINode(title);
+        getGameScene().addUINode(subtitle);
+        getGameScene().addUINode(hpLine);
+        getGameScene().addUINode(restart);
+
+        _winNodes = List.of(overlay, goldBar, stars, title, subtitle, hpLine, restart);
     }
 
     // ── Phase index helpers ───────────────────────────────────────────────────

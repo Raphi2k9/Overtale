@@ -16,6 +16,7 @@ public abstract class Item {
 
     public String getName() { return _name; }
     public String getDescription() { return _description; }
+    public String getIconName() { return null; }
 
     public abstract String use(Inventory inventory, int slot);
 

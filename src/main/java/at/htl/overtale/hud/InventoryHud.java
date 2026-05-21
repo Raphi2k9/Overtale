@@ -3,6 +3,7 @@ package at.htl.overtale.hud;
 import at.htl.overtale.component.items.Inventory;
 import at.htl.overtale.component.items.Item;
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -52,8 +53,10 @@ public class InventoryHud {
     private final Inventory _inventory;
 
     private Pane        _inventoryPane;
-    private Rectangle[] _slotBoxes = new Rectangle[Inventory.SIZE];
-    private Text[]      _slotTexts = new Text[Inventory.SIZE];
+    private Rectangle[] _slotBoxes      = new Rectangle[Inventory.SIZE];
+    private Rectangle[] _slotPlaceholders = new Rectangle[Inventory.SIZE];
+    private ImageView[] _slotIcons      = new ImageView[Inventory.SIZE];
+    private Text[]      _slotTexts      = new Text[Inventory.SIZE];
     private Text        _descText;
 
     private int selectedSlot = 0;
@@ -99,17 +102,27 @@ public class InventoryHud {
             _slotBoxes[i] = box;
             _inventoryPane.getChildren().add(box);
 
-            // TODO: replace with ImageView when sprites are ready
-            // ImageView icon = new ImageView(FXGL.image("textures/items/" + item.getName() + ".png"));
-            // icon.setFitWidth(32); icon.setFitHeight(32);
-            Rectangle icon = new Rectangle(ICON_SIZE, ICON_SIZE, Color.color(0.15, 0.12, 0.05));
-            icon.setStroke(Color.color(0.6, 0.5, 0.1));
-            icon.setStrokeWidth(1);
-            icon.setArcWidth(4);
-            icon.setArcHeight(4);
-            icon.setTranslateX(colX + ICON_INSET);
-            icon.setTranslateY(rowY + 6);
-            _inventoryPane.getChildren().add(icon);
+            // Placeholder shown when no icon is available
+            Rectangle placeholder = new Rectangle(ICON_SIZE, ICON_SIZE, Color.color(0.15, 0.12, 0.05));
+            placeholder.setStroke(Color.color(0.6, 0.5, 0.1));
+            placeholder.setStrokeWidth(1);
+            placeholder.setArcWidth(4);
+            placeholder.setArcHeight(4);
+            placeholder.setTranslateX(colX + ICON_INSET);
+            placeholder.setTranslateY(rowY + 6);
+            _slotPlaceholders[i] = placeholder;
+            _inventoryPane.getChildren().add(placeholder);
+
+            // Icon ImageView (hidden until an item with an icon is in this slot)
+            ImageView iconView = new ImageView();
+            iconView.setFitWidth(ICON_SIZE);
+            iconView.setFitHeight(ICON_SIZE);
+            iconView.setSmooth(false);
+            iconView.setTranslateX(colX + ICON_INSET);
+            iconView.setTranslateY(rowY + 6);
+            iconView.setVisible(false);
+            _slotIcons[i] = iconView;
+            _inventoryPane.getChildren().add(iconView);
 
             // Item name (truncated to 18 chars)
             Text name = makeText("---", 14);
@@ -205,9 +218,20 @@ public class InventoryHud {
             if (item != null) {
                 _slotTexts[i].setText(truncate(item.getName()));
                 _slotTexts[i].setFill(i == selectedSlot ? Color.YELLOW : Color.WHITE);
+                String iconName = item.getIconName();
+                if (iconName != null) {
+                    _slotIcons[i].setImage(FXGL.image("items/" + iconName));
+                    _slotIcons[i].setVisible(true);
+                    _slotPlaceholders[i].setVisible(false);
+                } else {
+                    _slotIcons[i].setVisible(false);
+                    _slotPlaceholders[i].setVisible(true);
+                }
             } else {
                 _slotTexts[i].setText("---");
                 _slotTexts[i].setFill(EMPTY_FG);
+                _slotIcons[i].setVisible(false);
+                _slotPlaceholders[i].setVisible(true);
             }
         }
         updateDesc();

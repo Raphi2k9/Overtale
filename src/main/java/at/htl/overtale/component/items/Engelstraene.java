@@ -6,6 +6,9 @@ public class Engelstraene extends Item {
     }
 
     @Override
+    public String getIconName() { return "engelstraene.png"; }
+
+    @Override
     public String use(Inventory inventory, int slot) {
         inventory.removeItem(slot);
         return "Du benutzt die Engelsträne und heilst dich um 10 HP";

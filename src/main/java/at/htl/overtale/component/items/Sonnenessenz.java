@@ -7,6 +7,9 @@ public class Sonnenessenz extends Item {
     }
 
     @Override
+    public String getIconName() { return "sonnen_essenz.png"; }
+
+    @Override
     public String use(Inventory inventory, int slot) {
         inventory.removeItem(slot);
         return "Du benutzt die Sonnenessenz und heilst dich um 5 HP";

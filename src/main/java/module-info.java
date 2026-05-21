@@ -5,6 +5,7 @@ open module at.htl.overtale {
     requires com.almasb.fxgl.all;
     requires java.desktop;
     requires com.google.gson;
+    requires jlayer;
 
     exports at.htl.overtale;
     exports at.htl.overtale.entity;

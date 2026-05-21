@@ -44,6 +44,8 @@ public class GameApp extends GameApplication {
 
     // ── State ─────────────────────────────────────────────────────────────────
 
+    private final GameMusicPlayer _music = new GameMusicPlayer();
+
     private OvertaleHud      _hud;
     private DialogManager    _dialogManager;
     private InventoryHud     _inventoryHud;
@@ -93,6 +95,17 @@ public class GameApp extends GameApplication {
 
     @Override
     protected void initInput() {
+        onKeyDown(KeyCode.ESCAPE, () ->
+            javafx.application.Platform.runLater(() -> {
+                if (getSceneService().getCurrentScene() != getGameScene()) {
+                    playMenuMusic();
+                } else {
+                    if (_currentBossIndex >= 0) playFightMusic();
+                    else _music.stop();
+                }
+            })
+        );
+
         onKey(KeyCode.W, () -> {
             if (_inDodgePhase) {
                 if (!_hud.isGravityEnabled()) _hud.moveHeart(0, -3);
@@ -190,12 +203,24 @@ public class GameApp extends GameApplication {
         });
     }
 
+    // ── Music ─────────────────────────────────────────────────────────────────
+
+    private void playMenuMusic() {
+        _music.loop("Overtale_Sample_Song_1.mp3");
+    }
+
+    private void playFightMusic() {
+        _music.loop("Overtale_song_2.mp3");
+    }
+
     // ── Game init ─────────────────────────────────────────────────────────────
 
     @Override
     protected void initGame() {
         _bosses  = GameDataLoader.loadBosses();
         _dialogs = GameDataLoader.loadDialogs();
+
+        _music.stop();
 
         _bossEntities.clear();
         _chests.clear();
@@ -304,6 +329,7 @@ public class GameApp extends GameApplication {
         _enemyHP    = boss.maxHp();
         _hud.setEnemyName(boss.name());
         _hud.updateEnemyHP(_enemyHP, _enemyMaxHP);
+        playFightMusic();
         _dialogManager.startDialog(boss.preDialog(), () -> _hud.showHUD());
     }
 
@@ -389,6 +415,7 @@ public class GameApp extends GameApplication {
                 .put("items", new Item[]{boss.reward()})));
 
         _currentBossIndex = -1;
+        _music.stop();
         _hud.hideAll();
         _dialogManager.startDialog(boss.postDialog(), () -> {
             if (_bossesDefeated >= _bosses.length) showVictory();

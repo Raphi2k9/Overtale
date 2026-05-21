@@ -49,6 +49,9 @@ public class GameApp extends GameApplication {
     private InventoryHud     _inventoryHud;
     private Inventory        _inventory;
     private Entity           _player;
+    private Entity           _toriel;
+    private Entity           _undyne;
+    private Entity           _alphys;
     private Entity           _sans;
     private Entity           _papyrus;
     private List<Entity>     _bossEntities = new ArrayList<>();
@@ -62,6 +65,7 @@ public class GameApp extends GameApplication {
     private int _bossesDefeated   = 0;
     private int _bonusDamage      = 0;
 
+    private double      _spiralAngle          = 0.0;
     private boolean     _inDodgePhase         = false;
     private boolean     _isGameOver           = false;
     private int         _dodgeRound           = 0;
@@ -165,6 +169,9 @@ public class GameApp extends GameApplication {
                 Entity nearBoss  = getNearbyBoss();
                 if      (nearChest != null)                              handleOpenChest(nearChest);
                 else if (nearBoss  != null)                              startBossFight(nearBoss);
+                else if (_toriel  != null && _player.distanceBBox(_toriel)  < 60) _dialogManager.startDialog(_dialogs.toriel);
+                else if (_undyne  != null && _player.distanceBBox(_undyne)  < 60) _dialogManager.startDialog(_dialogs.undyne);
+                else if (_alphys  != null && _player.distanceBBox(_alphys)  < 60) _dialogManager.startDialog(_dialogs.alphys);
                 else if (_sans    != null && _player.distanceBBox(_sans)    < 60) _dialogManager.startDialog(_dialogs.sans);
                 else if (_papyrus != null && _player.distanceBBox(_papyrus) < 60) _dialogManager.startDialog(_dialogs.papyrus);
             }
@@ -196,6 +203,7 @@ public class GameApp extends GameApplication {
         _inDodgePhase          = false;
         _dodgeRound            = 0;
         _damageCooldown        = 0.0;
+        _spiralAngle           = 0.0;
         _dodgeTimerAction      = null;
         _richterBoltTimerAction = null;
 
@@ -203,6 +211,9 @@ public class GameApp extends GameApplication {
         setLevelFromMap("TestMap1.tmx");
 
         _player  = spawn("player", 416, 1504);
+        _toriel  = spawn("npc", new SpawnData(640, 1504).put("color", Color.web("#FF80AB")));
+        _undyne  = spawn("npc", new SpawnData(640, 1100).put("color", Color.web("#42A5F5")));
+        _alphys  = spawn("npc", new SpawnData(640, 576).put("color",  Color.web("#A5D6A7")));
         _sans    = spawn("npc", 160, 800);
         _papyrus = spawn("npc", 672, 800);
 
@@ -400,6 +411,7 @@ public class GameApp extends GameApplication {
             case RANDOM_TARGET -> spawnRandomTargetBullet();
             case RAIN          -> spawnRainBullets();
             case CROSSFIRE     -> spawnCrossfireBullets();
+            case SPIRAL        -> spawnSpiralBullets();
         }
     }
 
@@ -439,6 +451,18 @@ public class GameApp extends GameApplication {
             Point2D dir = aimAtHeart(o[0], o[1], 195);
             _hud.addDodgeBullet(o[0], o[1], dir.getX(), dir.getY());
         }
+    }
+
+    private void spawnSpiralBullets() {
+        double cx = OvertaleHud.BATTLE_INNER_X + OvertaleHud.BATTLE_INNER_W / 2.0 - 5;
+        double cy = OvertaleHud.BATTLE_INNER_Y + OvertaleHud.BATTLE_INNER_H / 2.0 - 5;
+        int count = 8;
+        double speed = 145.0;
+        for (int i = 0; i < count; i++) {
+            double angle = _spiralAngle + i * (2 * Math.PI / count);
+            _hud.addDodgeBullet(cx, cy, Math.cos(angle) * speed, Math.sin(angle) * speed);
+        }
+        _spiralAngle += Math.PI / 8.0;
     }
 
     private Point2D aimAtHeart(double fromX, double fromY, double speed) {

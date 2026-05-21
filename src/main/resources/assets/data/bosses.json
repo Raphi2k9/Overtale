@@ -60,8 +60,8 @@
     "preDialog": [
       "Hier endet deine Reise, Sterblicher.",
       "Ich bin der Richter dieser Welt.",
-      "Zwei meiner Brüder hast du bezwungen... beeindruckend.",
-      "Aber kein Sterblicher hat je mein Urteil überstanden.",
+      "Acht Archons hast du bezwungen... unfassbar.",
+      "Kein Sterblicher hat je mein Urteil überstanden.",
       "GERICHTSTAG!"
     ],
     "actDialog": [
@@ -137,6 +137,85 @@
       { "name": "Brennstrahl", "duration": 6.0, "interval": 1.2 },
       { "name": "Gitterfalle", "duration": 6.0, "interval": 1.2 },
       { "name": "Blitzraster", "duration": 7.0, "interval": 0.8 }
+    ]
+  },
+  {
+    "name": "Der Dunkle Bote",
+    "maxHp": 28,
+    "pattern": "SPIRAL",
+    "fightDuration": 8.0,
+    "bulletInterval": 1.2,
+    "spawnX": 640, "spawnY": 1200,
+    "color": "#4A148C", "stroke": "#E040FB",
+    "reward": "Schattensplitter",
+    "preDialog": [
+      "Ein Eindringling wagt es, die Passage zu betreten?",
+      "Ich bin der Bote der Archons. Meine Botschaft: KEHRE UM!",
+      "Du wirst hier dein Ende finden.",
+      "SPIRALE DES TODES!"
+    ],
+    "actDialog": [
+      "Der Dunkle Bote entsendet Kugeln kreisförmig aus der Mitte!",
+      "Bleib in den Lücken zwischen den rotierenden Wellen!"
+    ],
+    "postDialog": [
+      "Unmöglich... ich bin der Wächter der Passage...",
+      "Die Archons werden von deiner Kühnheit erfahren.",
+      "Nimm diesen Splitter... er war einst meine Stärke.",
+      "Geh weiter... wenn du es wagst."
+    ]
+  },
+  {
+    "name": "Die Leere",
+    "maxHp": 32,
+    "pattern": "CROSSFIRE",
+    "fightDuration": 7.0,
+    "bulletInterval": 0.65,
+    "spawnX": 160, "spawnY": 1000,
+    "color": "#1B1B1B", "stroke": "#9E9E9E",
+    "reward": "Leereklinge",
+    "preDialog": [
+      "...",
+      "Du betrittst das Reich der Leere.",
+      "Hier war alles... bevor Licht und Dunkel existierten.",
+      "Ich bin die Leere. Ich bin unvermeidlich."
+    ],
+    "actDialog": [
+      "Die Leere schleudert Kugeln aus allen vier Richtungen!",
+      "Finde die Lücken und weiche den Kugeln aus!"
+    ],
+    "postDialog": [
+      "...",
+      "Du hast das Unbegreifliche besiegt.",
+      "Meine Klinge... sie hat keinen würdigen Besitzer mehr gefunden.",
+      "Bis wir uns... wiedersehen."
+    ]
+  },
+  {
+    "name": "Der Traumwächter",
+    "maxHp": 30,
+    "pattern": "RAIN",
+    "fightDuration": 8.0,
+    "bulletInterval": 0.6,
+    "spawnX": 160, "spawnY": 640,
+    "color": "#00695C", "stroke": "#80CBC4",
+    "reward": "Traumessenz",
+    "preDialog": [
+      "Schläfst du... oder träumst du?",
+      "Ich bin der Hüter des Traumreichs.",
+      "Dieser Pfad führt in die oberen Sphären.",
+      "Beweise, dass du das Wachen verdienst!",
+      "TRAUMFLUT!"
+    ],
+    "actDialog": [
+      "Der Traumwächter lässt Traumpartikel regnen.",
+      "Weiche dem Regen aus — bewege das Herz seitwärts!"
+    ],
+    "postDialog": [
+      "Du... bist wacher als die meisten.",
+      "Mein Reich war nie unbesiegbar.",
+      "Diese Essenz trägt die Kraft der Träume in sich.",
+      "Die oberen Sphären... gehören nun dir."
     ]
   }
 ]

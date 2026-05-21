@@ -13,6 +13,9 @@ public class ItemFactory {
             case "GöttlicherSpeer"    -> new GöttlicherSpeer();
             case "Himmelsrelikt"      -> new Himmelsrelikt();
             case "Sonnenessenz"       -> new Sonnenessenz();
+            case "Schattensplitter"   -> new Schattensplitter();
+            case "Leereklinge"        -> new Leereklinge();
+            case "Traumessenz"        -> new Traumessenz();
             default -> throw new IllegalArgumentException("Unknown item: " + name);
         };
     }

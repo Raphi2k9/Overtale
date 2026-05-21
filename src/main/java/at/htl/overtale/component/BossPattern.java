@@ -10,5 +10,7 @@ public enum BossPattern {
     /** Gravity jump-and-run: heart falls, player jumps over scrolling obstacles. */
     GRAVITY_JUMP,
     /** Laser dodge: warning flash then active laser beams deal damage. */
-    LASER
+    LASER,
+    /** Concentric burst: bullets fire outward in a circle from the center, rotating each wave. */
+    SPIRAL
 }

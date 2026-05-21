@@ -1,24 +1,52 @@
 {
   "intro": [
     "Willkommen, Fremder...",
-    "Diese Welt liegt im Dunkeln. Drei mächtige Wächter halten sie gefangen.",
-    "Suche den Ratgeber (gelbe Figur) in deiner Nähe für mehr Informationen.",
-    "Drücke E zum Interagieren."
+    "Diese Welt liegt im Dunkeln. Acht mächtige Archons halten sie gefangen.",
+    "Du bist die letzte Hoffnung dieses Landes.",
+    "Sprich mit Toriel — sie ist in deiner Nähe. Drücke E zum Interagieren."
   ],
   "victory": [
-    "Du hast alle Wächter besiegt!",
+    "Du hast alle Archons besiegt!",
+    "Von den Tiefen der Finsternis bis zu den höchsten Sphären —",
+    "du bist durch alles hindurchgegangen.",
     "Das Licht kehrt in diese Welt zurück.",
     "Du bist ein wahrer Held dieser Welt.",
     "... Ende von Level 1 ..."
   ],
+  "toriel": [
+    "Mein Kind... ich bin froh, dass du sicher bist.",
+    "Diese Welt war einst voller Licht und Leben.",
+    "Acht Archons haben sich dem Dunkel hingegeben und alles korrumpiert.",
+    "Du trägst eine Kraft in dir, die ich noch nie gesehen habe.",
+    "Sei vorsichtig — der erste Archon, Finsternisgeist, lauert gleich über dir.",
+    "Ich glaube an dich, mein Kind. Komm zurück, wenn du Kraft brauchst."
+  ],
+  "undyne": [
+    "HEY! Du bist also der Auserwählte?!",
+    "Ich hab's selbst versucht — die Archons haben mich plattgemacht. Punkt.",
+    "Aber du... du hast diese Flamme in den Augen. LASS DICH NICHT UNTERKRIEGEN!",
+    "Die Leere lauert links auf dich — die ist gruselig, echt mal.",
+    "Und der Traumwächter oben links... der ist nicht von dieser Welt.",
+    "ZEIG DENEN WAS DU KANNST! PUNK NICHT AUF!"
+  ],
+  "alphys": [
+    "Oh! Ä-ähm... ich bin Alphys. Entschuldigung, ich bin etwas nervös.",
+    "Ich habe die Archons jahrelang studiert. Ihre Energie ist... faszinierend.",
+    "Der Schattenwächter hier schöpft Kraft aus der kollektiven Finsternis.",
+    "Und da oben... der Richter. Ehrlich gesagt m-macht mir der Angst.",
+    "Seine Macht übersteigt alle anderen Archons zusammen.",
+    "Deine bisherigen Kampfdaten sind... sehr beeindruckend. Viel Glück!"
+  ],
   "sans": [
     "Heya. Ich bin Sans. Sans der Skelett.",
     "Du solltest vorsichtig sein hier oben... die Archons spielen nicht.",
+    "Kleiner Tipp: Der Springer lauert links, das Auge rechts.",
     "Halo-Donut gefällig? Kostet nur ein bisschen SOUL."
   ],
   "papyrus": [
     "NYYYYEH HEH HEH! ICH BIN DER GROSSE PAPYRUS!",
     "Ich trainiere gerade zum Engel! Ist das nicht wunderbar?!",
-    "Sei vorsichtig — der Richter wartet oben auf dich!"
+    "Der Springer links und das Auge rechts warten auf dich!",
+    "Und sei vorsichtig beim Traumwächter oben links — NYeh!"
   ]
 }

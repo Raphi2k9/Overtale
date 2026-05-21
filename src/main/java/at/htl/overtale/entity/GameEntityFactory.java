@@ -29,9 +29,10 @@ public class GameEntityFactory implements EntityFactory {
     }
     @Spawns("npc")
     public Entity newNpc(SpawnData data) {
+        Color c = data.hasKey("color") ? data.get("color") : Color.YELLOW;
         return FXGL.entityBuilder(data)
                 .type(EntityType.NPC)
-                .viewWithBBox(new Rectangle(40, 40, Color.YELLOW))
+                .viewWithBBox(new Rectangle(40, 40, c))
                 .zIndex(1)
                 .build();
     }

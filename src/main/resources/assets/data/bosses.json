@@ -5,7 +5,7 @@
     "pattern": "RANDOM_TARGET",
     "fightDuration": 7.0,
     "bulletInterval": 1.4,
-    "spawnX": 416, "spawnY": 1376,
+    "spawnX": 752, "spawnY": 1992,
     "color": "#6B1FA3", "stroke": "#CE93D8",
     "reward": "Engelssegen",
     "preDialog": [
@@ -29,7 +29,7 @@
     "pattern": "RAIN",
     "fightDuration": 9.0,
     "bulletInterval": 0.75,
-    "spawnX": 416, "spawnY": 576,
+    "spawnX": 752, "spawnY": 912,
     "color": "#1A237E", "stroke": "#82B1FF",
     "reward": "HeiligesSchwert",
     "preDialog": [
@@ -54,7 +54,7 @@
     "pattern": "CROSSFIRE",
     "fightDuration": 0.55,
     "bulletInterval": 0.55,
-    "spawnX": 416, "spawnY": 192,
+    "spawnX": 1456, "spawnY": 272,
     "color": "#37474F", "stroke": "#FFD700",
     "reward": "HeiliigeSchriftrolle",
     "preDialog": [
@@ -89,7 +89,7 @@
     "pattern": "GRAVITY_JUMP",
     "fightDuration": 10.0,
     "bulletInterval": 1.4,
-    "spawnX": 256, "spawnY": 800,
+    "spawnX": 176, "spawnY": 1616,
     "color": "#BF360C", "stroke": "#FF7043",
     "reward": "SpringerAmulett",
     "preDialog": [
@@ -113,7 +113,7 @@
     "pattern": "LASER",
     "fightDuration": 0.0,
     "bulletInterval": 0.0,
-    "spawnX": 544, "spawnY": 800,
+    "spawnX": 1040, "spawnY": 1616,
     "color": "#1A0033", "stroke": "#00E5FF",
     "reward": "KosmischesAuge",
     "preDialog": [
@@ -145,7 +145,7 @@
     "pattern": "SPIRAL",
     "fightDuration": 8.0,
     "bulletInterval": 1.2,
-    "spawnX": 640, "spawnY": 1200,
+    "spawnX": 752, "spawnY": 1232,
     "color": "#4A148C", "stroke": "#E040FB",
     "reward": "Schattensplitter",
     "preDialog": [
@@ -171,7 +171,7 @@
     "pattern": "CROSSFIRE",
     "fightDuration": 7.0,
     "bulletInterval": 0.65,
-    "spawnX": 160, "spawnY": 1000,
+    "spawnX": 80, "spawnY": 1264,
     "color": "#1B1B1B", "stroke": "#9E9E9E",
     "reward": "Leereklinge",
     "preDialog": [
@@ -197,7 +197,7 @@
     "pattern": "RAIN",
     "fightDuration": 8.0,
     "bulletInterval": 0.6,
-    "spawnX": 160, "spawnY": 640,
+    "spawnX": 656, "spawnY": 752,
     "color": "#00695C", "stroke": "#80CBC4",
     "reward": "Traumessenz",
     "preDialog": [

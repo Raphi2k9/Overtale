@@ -241,12 +241,12 @@ public class GameApp extends GameApplication {
         getGameWorld().addEntityFactory(new GameEntityFactory());
         setLevelFromMap("TestMap1.tmx");
 
-        _player  = spawn("player", 416, 1504);
-        _toriel  = spawn("npc", new SpawnData(640, 1504).put("color", Color.web("#FF80AB")));
-        _undyne  = spawn("npc", new SpawnData(640, 1100).put("color", Color.web("#42A5F5")));
-        _alphys  = spawn("npc", new SpawnData(640, 576).put("color",  Color.web("#A5D6A7")));
-        _sans    = spawn("npc", 160, 800);
-        _papyrus = spawn("npc", 672, 800);
+        _player  = spawn("player", 752, 2192);
+        _toriel  = spawn("npc", new SpawnData(656, 1520).put("color", Color.web("#FF80AB")));
+        _undyne  = spawn("npc", new SpawnData(976, 2128).put("color", Color.web("#42A5F5")));
+        _alphys  = spawn("npc", new SpawnData(752,  944).put("color", Color.web("#A5D6A7")));
+        _sans    = spawn("npc", 624, 1648);
+        _papyrus = spawn("npc", 848, 1648);
 
         for (int i = 0; i < _bosses.length; i++) {
             BossData b = _bosses[i];
@@ -265,7 +265,7 @@ public class GameApp extends GameApplication {
 
         getGameScene().getViewport().bindToEntity(_player, getAppWidth() / 2, getAppHeight() / 2);
         getGameScene().getViewport().setLazy(true);
-        getGameScene().getViewport().setBounds(0, 0, 30 * 32, 50 * 32);
+        getGameScene().getViewport().setBounds(0, 0, 60 * 32, 70 * 32);
     }
 
     @Override
